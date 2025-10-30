@@ -1,0 +1,505 @@
+"""
+Python継承完全ガイド - super, __init__, self
+Python Inheritance Complete Guide - super, __init__, self
+
+新人エンジニア向け / For New Engineers
+日本語 & English
+"""
+
+print("=" * 80)
+print("Python 継承ガイド / Python Inheritance Guide")
+print("=" * 80)
+
+# ============================================================================
+# セクション1: self とは？ / Section 1: What is self?
+# ============================================================================
+print("\n【セクション1: self とは？】")
+print("【Section 1: What is self?】\n")
+
+# 日本語説明
+print("■ 日本語説明:")
+print("self = 自分自身のこと")
+print("  - クラスのメソッド内で、そのオブジェクト自身を指す")
+print("  - 「自分の属性」や「自分のメソッド」にアクセスするために使う")
+
+# English explanation
+print("\n■ English Explanation:")
+print("self = itself")
+print("  - Refers to the object itself within a class method")
+print("  - Used to access 'own attributes' and 'own methods'")
+
+# 実例 / Example
+print("\n--- 実例 / Example ---\n")
+
+class Person:
+    """人クラス / Person class"""
+    
+    def __init__(self, name, age):
+        # self.name = 「自分の」name属性
+        # self.name = "my own" name attribute
+        self.name = name
+        self.age = age
+        print(f"  Created person: {self.name}, {self.age} years old")
+    
+    def introduce(self):
+        # self.name で「自分の」name属性にアクセス
+        # Access "my own" name attribute with self.name
+        print(f"  Hello! I'm {self.name}, {self.age} years old")
+
+# オブジェクトを作成 / Create object
+person1 = Person("Tanaka", 25)
+person2 = Person("Sato", 30)
+
+# それぞれのオブジェクトが自分のデータを持つ
+# Each object has its own data
+person1.introduce()  # person1 の self.name = "Tanaka"
+person2.introduce()  # person2 の self.name = "Sato"
+
+print("\n✓ ポイント / Key Point:")
+print("  self は各オブジェクト固有のデータを管理する")
+print("  self manages data unique to each object")
+
+# ============================================================================
+# セクション2: __init__ とは？ / Section 2: What is __init__?
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション2: __init__ とは？】")
+print("【Section 2: What is __init__?】\n")
+
+# 日本語説明
+print("■ 日本語説明:")
+print("__init__ = コンストラクタ（初期化メソッド）")
+print("  - オブジェクトを作る時に自動的に呼ばれる")
+print("  - オブジェクトの初期設定をする場所")
+
+# English explanation
+print("\n■ English Explanation:")
+print("__init__ = Constructor (initialization method)")
+print("  - Automatically called when creating an object")
+print("  - Place to do initial setup of object")
+
+# 実例 / Example
+print("\n--- 実例 / Example ---\n")
+
+class Car:
+    """車クラス / Car class"""
+    
+    # __init__ は自動的に呼ばれる
+    # __init__ is automatically called
+    def __init__(self, brand, color):
+        print(f"  [__init__ called] Creating a {color} {brand}")
+        self.brand = brand
+        self.color = color
+        self.speed = 0  # 初期速度 / initial speed
+
+# オブジェクトを作成すると __init__ が自動実行される
+# When creating object, __init__ is automatically executed
+print("car1 = Car('Toyota', 'Red')  ← この時 __init__ が呼ばれる")
+print("car1 = Car('Toyota', 'Red')  ← __init__ is called at this time")
+car1 = Car("Toyota", "Red")
+
+print("\ncar2 = Car('Honda', 'Blue')")
+car2 = Car("Honda", "Blue")
+
+print("\n✓ ポイント / Key Point:")
+print("  __init__ は明示的に呼ばない。自動で実行される")
+print("  Don't call __init__ explicitly. It's executed automatically")
+
+# ============================================================================
+# セクション3: 継承とは？ / Section 3: What is Inheritance?
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション3: 継承とは？】")
+print("【Section 3: What is Inheritance?】\n")
+
+# 日本語説明
+print("■ 日本語説明:")
+print("継承 = 既存のクラスを元に新しいクラスを作ること")
+print("  - 親クラス（基底クラス）の機能を引き継ぐ")
+print("  - 子クラス（派生クラス）は親の機能に追加・変更できる")
+
+# English explanation
+print("\n■ English Explanation:")
+print("Inheritance = Creating a new class based on existing class")
+print("  - Inherits functionality from parent class (base class)")
+print("  - Child class (derived class) can add/modify parent's features")
+
+# 実例 / Example
+print("\n--- 実例 / Example ---\n")
+
+# 親クラス / Parent class
+class Animal:
+    """動物クラス（親）/ Animal class (parent)"""
+    
+    def __init__(self, name):
+        print(f"  [Animal.__init__] Creating animal: {name}")
+        self.name = name
+    
+    def eat(self):
+        print(f"  {self.name} is eating")
+
+# 子クラス / Child class
+class Dog(Animal):  # ← Animal を継承 / Inherits Animal
+    """犬クラス（子）/ Dog class (child)"""
+    
+    def bark(self):
+        # 親にはないメソッドを追加 / Add method that parent doesn't have
+        print(f"  {self.name} says: Woof! Woof!")
+
+# 使用例 / Usage
+print("dog = Dog('Pochi')")
+dog = Dog("Pochi")  # Animal.__init__ が呼ばれる / Animal.__init__ is called
+
+print("\ndog.eat()  ← 親のメソッド / Parent's method")
+dog.eat()  # 親から継承したメソッド / Method inherited from parent
+
+print("\ndog.bark()  ← 子独自のメソッド / Child's own method")
+dog.bark()  # 子クラスで追加したメソッド / Method added in child class
+
+print("\n✓ ポイント / Key Point:")
+print("  子クラスは親の機能を全て使える + 独自の機能も追加できる")
+print("  Child class can use all parent's features + add its own features")
+
+# ============================================================================
+# セクション4: 問題発生！子クラスの __init__ / Section 4: Problem! Child's __init__
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション4: 問題発生！子クラスの __init__】")
+print("【Section 4: Problem! Child's __init__】\n")
+
+# 日本語説明
+print("■ 問題 / Problem:")
+print("子クラスで __init__ を定義すると、親の __init__ が呼ばれなくなる！")
+print("If you define __init__ in child class, parent's __init__ won't be called!")
+
+# 悪い例 / Bad example
+print("\n--- ❌ 悪い例 / Bad Example ---\n")
+
+class Cat(Animal):
+    """猫クラス（悪い例）/ Cat class (bad example)"""
+    
+    def __init__(self, name, color):
+        # 親の __init__ を呼んでいない！
+        # Not calling parent's __init__!
+        print(f"  [Cat.__init__] Creating cat: {name}, {color}")
+        # self.name を設定していない！
+        # Not setting self.name!
+        self.color = color
+
+print("cat = Cat('Tama', 'White')")
+cat = Cat("Tama", "White")
+
+print("\ntry: cat.eat()")
+print("try: cat.eat()")
+try:
+    cat.eat()  # エラー！self.name が存在しない / Error! self.name doesn't exist
+except AttributeError as e:
+    print(f"  ❌ Error: {e}")
+
+print("\n✓ 問題 / Problem:")
+print("  親の __init__ が呼ばれず、self.name が設定されていない")
+print("  Parent's __init__ wasn't called, self.name is not set")
+
+# ============================================================================
+# セクション5: super() で解決！ / Section 5: Solve with super()!
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション5: super() で解決！】")
+print("【Section 5: Solve with super()!】\n")
+
+# 日本語説明
+print("■ 日本語説明:")
+print("super() = 親クラスにアクセスする方法")
+print("  - 子クラスの __init__ から親の __init__ を呼べる")
+print("  - 親の機能を確実に初期化できる")
+
+# English explanation
+print("\n■ English Explanation:")
+print("super() = Method to access parent class")
+print("  - Can call parent's __init__ from child's __init__")
+print("  - Can reliably initialize parent's features")
+
+# 良い例 / Good example
+print("\n--- ✅ 良い例 / Good Example ---\n")
+
+class Bird(Animal):
+    """鳥クラス（良い例）/ Bird class (good example)"""
+    
+    def __init__(self, name, can_fly):
+        # super().__init__(name) で親の __init__ を呼ぶ
+        # Call parent's __init__ with super().__init__(name)
+        print(f"  [Bird.__init__] Before calling super()")
+        super().__init__(name)  # ← ここで親の __init__ を実行
+        print(f"  [Bird.__init__] After calling super(), adding can_fly")
+        self.can_fly = can_fly
+    
+    def fly(self):
+        if self.can_fly:
+            print(f"  {self.name} is flying!")
+        else:
+            print(f"  {self.name} cannot fly")
+
+print("bird = Bird('Sparrow', True)")
+bird = Bird("Sparrow", True)
+
+print("\nbird.eat()  ← 親のメソッド / Parent's method")
+bird.eat()  # self.name が正しく設定されている / self.name is set correctly
+
+print("\nbird.fly()  ← 子のメソッド / Child's method")
+bird.fly()
+
+print("\n✓ ポイント / Key Point:")
+print("  super().__init__(...) で親の初期化を確実に実行")
+print("  super().__init__(...) reliably executes parent's initialization")
+
+# ============================================================================
+# セクション6: super() の詳細な動作 / Section 6: super() Detailed Behavior
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション6: super() の詳細な動作】")
+print("【Section 6: super() Detailed Behavior】\n")
+
+# 日本語説明
+print("■ 日本語説明:")
+print("super() の動作:")
+print("  1. 親クラスへの参照を取得")
+print("  2. 親クラスのメソッドを呼び出す")
+print("  3. self は自動的に渡される")
+
+# English explanation
+print("\n■ English Explanation:")
+print("How super() works:")
+print("  1. Get reference to parent class")
+print("  2. Call parent class method")
+print("  3. self is automatically passed")
+
+# 詳細な例 / Detailed example
+print("\n--- 詳細な例 / Detailed Example ---\n")
+
+class Employee:
+    """従業員クラス（親）/ Employee class (parent)"""
+    
+    def __init__(self, name, employee_id):
+        print(f"  [Employee.__init__] Initializing employee")
+        print(f"    - Setting name: {name}")
+        print(f"    - Setting employee_id: {employee_id}")
+        self.name = name
+        self.employee_id = employee_id
+
+class Manager(Employee):
+    """マネージャークラス（子）/ Manager class (child)"""
+    
+    def __init__(self, name, employee_id, department):
+        print(f"  [Manager.__init__] START")
+        print(f"    Step 1: Call parent's __init__ with super()")
+        
+        # 親の __init__ を呼ぶ
+        # Call parent's __init__
+        super().__init__(name, employee_id)
+        
+        print(f"    Step 2: Parent's initialization complete")
+        print(f"    Step 3: Add manager-specific attribute")
+        self.department = department
+        print(f"    - Setting department: {department}")
+        print(f"  [Manager.__init__] END")
+    
+    def show_info(self):
+        print(f"\n  Manager Info:")
+        print(f"    Name: {self.name}")  # 親から継承
+        print(f"    ID: {self.employee_id}")  # 親から継承
+        print(f"    Department: {self.department}")  # 子で追加
+
+print("manager = Manager('Yamada', 'E001', 'Sales')")
+print("=" * 60)
+manager = Manager("Yamada", "E001", "Sales")
+print("=" * 60)
+
+manager.show_info()
+
+# ============================================================================
+# セクション7: 複数の引数を持つ継承 / Section 7: Inheritance with Multiple Arguments
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション7: 複数の引数を持つ継承】")
+print("【Section 7: Inheritance with Multiple Arguments】\n")
+
+# 実例 / Example
+print("--- 実例 / Example ---\n")
+
+class Vehicle:
+    """乗り物クラス（親）/ Vehicle class (parent)"""
+    
+    def __init__(self, brand, model, year):
+        print(f"  [Vehicle.__init__] {brand} {model} ({year})")
+        self.brand = brand
+        self.model = model
+        self.year = year
+
+class ElectricCar(Vehicle):
+    """電気自動車クラス（子）/ Electric car class (child)"""
+    
+    def __init__(self, brand, model, year, battery_capacity):
+        # 親に複数の引数を渡す
+        # Pass multiple arguments to parent
+        super().__init__(brand, model, year)
+        
+        print(f"  [ElectricCar.__init__] Battery: {battery_capacity} kWh")
+        self.battery_capacity = battery_capacity
+    
+    def show_specs(self):
+        print(f"\n  Specifications:")
+        print(f"    {self.brand} {self.model} ({self.year})")
+        print(f"    Battery: {self.battery_capacity} kWh")
+
+print("ev = ElectricCar('Tesla', 'Model 3', 2024, 75)")
+ev = ElectricCar("Tesla", "Model 3", 2024, 75)
+ev.show_specs()
+
+# ============================================================================
+# セクション8: super() を使わない場合との比較 / Section 8: Comparison with/without super()
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション8: super() を使わない場合との比較】")
+print("【Section 8: Comparison with/without super()】\n")
+
+# 日本語説明
+print("■ super()を使わない方法（古い書き方）:")
+print("■ Method without super() (old style):")
+
+class OldStyleChild(Animal):
+    def __init__(self, name, age):
+        # 古い書き方：親クラス名を直接指定
+        # Old style: directly specify parent class name
+        Animal.__init__(self, name)  # ← クラス名を直接書く
+        self.age = age
+
+print("\n■ super()を使う方法（推奨）:")
+print("■ Method with super() (recommended):")
+
+class NewStyleChild(Animal):
+    def __init__(self, name, age):
+        # 新しい書き方：super()を使う
+        # New style: use super()
+        super().__init__(name)  # ← super()を使う
+        self.age = age
+
+# 比較 / Comparison
+print("\n--- 比較 / Comparison ---\n")
+
+print("古い書き方 / Old style:")
+old = OldStyleChild("Old Dog", 5)
+
+print("\n新しい書き方 / New style:")
+new = NewStyleChild("New Dog", 3)
+
+print("\n✓ super() のメリット / Benefits of super():")
+print("  1. クラス名を書かなくていい（DRY原則）")
+print("     Don't need to write class name (DRY principle)")
+print("  2. 多重継承に対応できる")
+print("     Works with multiple inheritance")
+print("  3. メンテナンスしやすい")
+print("     Easier to maintain")
+
+# ============================================================================
+# セクション9: 実践例 - 会社システム / Section 9: Practical Example - Company System
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション9: 実践例 - 会社システム】")
+print("【Section 9: Practical Example - Company System】\n")
+
+class Person:
+    """人クラス（基底）/ Person class (base)"""
+    
+    def __init__(self, name, age):
+        print(f"  [Person.__init__] {name}, {age} years old")
+        self.name = name
+        self.age = age
+
+class Student(Person):
+    """学生クラス / Student class"""
+    
+    def __init__(self, name, age, student_id, grade):
+        # 親の初期化 / Initialize parent
+        super().__init__(name, age)
+        print(f"  [Student.__init__] ID: {student_id}, Grade: {grade}")
+        self.student_id = student_id
+        self.grade = grade
+    
+    def study(self):
+        print(f"  {self.name} (Grade {self.grade}) is studying")
+
+class Teacher(Person):
+    """教師クラス / Teacher class"""
+    
+    def __init__(self, name, age, subject, years_experience):
+        # 親の初期化 / Initialize parent
+        super().__init__(name, age)
+        print(f"  [Teacher.__init__] Subject: {subject}, Experience: {years_experience} years")
+        self.subject = subject
+        self.years_experience = years_experience
+    
+    def teach(self):
+        print(f"  {self.name} is teaching {self.subject}")
+
+# 使用例 / Usage
+print("--- 学生を作成 / Create Student ---")
+student = Student("Tanaka", 16, "S12345", 10)
+
+print("\n--- 教師を作成 / Create Teacher ---")
+teacher = Teacher("Yamada", 35, "Math", 10)
+
+print("\n--- メソッド呼び出し / Call Methods ---")
+student.study()
+teacher.teach()
+
+# ============================================================================
+# まとめ / Summary
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【まとめ / Summary】")
+print("=" * 80)
+
+print("""
+┌────────────────────────────────────────────────────────┐
+│ self（自分）                                            │
+├────────────────────────────────────────────────────────┤
+│ 日本語: 自分自身のオブジェクトを指す                     │
+│ English: Refers to the object itself                    │
+│ 使い方: self.name, self.method()                       │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ __init__（初期化）                                      │
+├────────────────────────────────────────────────────────┤
+│ 日本語: オブジェクト作成時に自動実行される              │
+│ English: Automatically executed when creating object    │
+│ 使い方: def __init__(self, ...):                       │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ 継承（Inheritance）                                     │
+├────────────────────────────────────────────────────────┤
+│ 日本語: 親クラスの機能を引き継ぐ                        │
+│ English: Inherit parent class functionality             │
+│ 使い方: class Child(Parent):                           │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ super()（親へのアクセス）                               │
+├────────────────────────────────────────────────────────┤
+│ 日本語: 親クラスのメソッドを呼ぶ                        │
+│ English: Call parent class method                       │
+│ 使い方: super().__init__(...)                          │
+└────────────────────────────────────────────────────────┘
+
+重要なパターン / Important Pattern:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+class Child(Parent):
+    def __init__(self, parent_args, child_args):
+        super().__init__(parent_args)  # 親を初期化
+        self.child_attr = child_args   # 子独自の属性
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+""")
+
+print("\n実行完了！ / Execution complete!")
+print("コードを読んで理解を深めてください / Read the code to deepen understanding")
