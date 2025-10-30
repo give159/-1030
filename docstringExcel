@@ -1,0 +1,37 @@
+import openpyxl
+
+# 新しいワークブック作成
+wb = openpyxl.Workbook()
+ws = wb.active
+ws.title = "Docstring Template"
+
+# ヘッダー
+headers = ["項目", "説明（日本語）", "説明（英語）", "記入例"]
+ws.append(headers)
+
+# テンプレート内容
+rows = [
+    ["関数名", "関数の名前", "Function name", "calculate_sum"],
+    ["概要", "関数の短い説明", "Short summary", "リスト内の数値を合計する / Calculate the sum of numbers in a list"],
+    ["詳細", "詳細説明（必要に応じて）", "Detailed description", "引数に渡したリスト内のすべての数値を合計する / Sums all numbers provided in the input list"],
+    ["引数1", "引数名", "Argument name", "numbers"],
+    ["型1", "引数の型", "Type", "list[int]"],
+    ["説明1", "引数の説明", "Description", "合計する整数リスト / List of integers to sum"],
+    ["引数2", "引数名", "Argument name", "start"],
+    ["型2", "引数の型", "Type", "int"],
+    ["説明2", "引数の説明", "Description", "合計を開始する初期値 / Initial value to start the sum from"],
+    ["戻り値", "戻り値の型と説明", "Returns", "int: 合計値 / int: Sum of the numbers"],
+    ["例外", "発生する可能性のある例外", "Raises", "TypeError: numbersがリストでない場合 / TypeError: if numbers is not a list"],
+    ["サンプルコード", "使用例", "Example", ">>> calculate_sum([1,2,3], start=10)\n16"]
+]
+
+for row in rows:
+    ws.append(row)
+
+# 列幅調整
+for col in ["A", "B", "C", "D"]:
+    ws.column_dimensions[col].width = 35
+
+# 保存
+wb.save("Google_Style_Docstring_Template.xlsx")
+print("Excelファイルが作成されました！")
