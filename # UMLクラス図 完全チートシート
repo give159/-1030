@@ -1,0 +1,725 @@
+# UMLクラス図 完全チートシート
+
+## 目次
+1. 基本構造
+2. 多重度（Multiplicity）
+3. 関係性の記号
+4. 可視性（Visibility）
+5. 実践例
+6. よく使うパターン
+
+---
+
+## 1. 基本構造
+
+### クラスの3段構成
+
+```
+┌─────────────────────────┐
+│  クラス名                │ ← 上段：クラス名
+├─────────────────────────┤
+│  - 属性: 型              │ ← 中段：属性（プロパティ）
+├─────────────────────────┤
+│  + メソッド(): 戻り値型   │ ← 下段：メソッド（関数）
+└─────────────────────────┘
+```
+
+### 具体例
+
+```
+┌─────────────────────────┐
+│  User                    │
+├─────────────────────────┤
+│  - id: int               │
+│  - name: string          │
+│  - email: string         │
+├─────────────────────────┤
+│  + login(): boolean      │
+│  + logout(): void        │
+│  + getName(): string     │
+└─────────────────────────┘
+```
+
+---
+
+## 2. 多重度（Multiplicity）
+
+### 基本記法
+
+多重度は**関連の端**に書く
+
+```
+ClassA ────── 1..* ClassB
+      数字    矢印    数字
+```
+
+### 多重度の種類
+
+| 記法 | 日本語 | 英語 | 意味 |
+|------|--------|------|------|
+| `1` | ちょうど1 | Exactly one | 必ず1つ |
+| `0..1` | 0または1 | Zero or one | 任意（最大1つ） |
+| `*` | 0以上 | Zero or more | 何個でも |
+| `0..*` | 0以上 | Zero or more | 何個でも（明示的） |
+| `1..*` | 1以上 | One or more | 必ず1つ以上 |
+| `2..5` | 2から5 | Two to five | 2個以上5個以下 |
+| `3` | ちょうど3 | Exactly three | 必ず3つ |
+
+---
+
+## 3. 関係性の記号
+
+### 一覧表
+
+| 関係 | 記号 | 日本語 | 英語 | 意味 |
+|------|------|--------|------|------|
+| **継承** | `───△` | 継承/汎化 | Inheritance/Generalization | is-a関係 |
+| **実現** | `┄┄┄△` | 実現/実装 | Realization/Implementation | インターフェース実装 |
+| **関連** | `────` | 関連 | Association | 関係がある |
+| **集約** | `◇────` | 集約 | Aggregation | 弱い所有（白抜き） |
+| **コンポジション** | `◆────` | コンポジション | Composition | 強い所有（黒塗り） |
+| **依存** | `┄┄┄→` | 依存 | Dependency | 一時的使用 |
+
+### 矢印の方向
+
+```
+読む方向 →
+
+A ──→ B  : AからBへの関連
+A ──── B : 双方向関連（矢印なし）
+```
+
+---
+
+## 4. 可視性（Visibility）
+
+### 記号一覧
+
+| 記号 | 日本語 | 英語 | 説明 |
+|------|--------|------|------|
+| `+` | 公開 | public | どこからでもアクセス可 |
+| `-` | 非公開 | private | クラス内部のみ |
+| `#` | 保護 | protected | 自分と継承先のみ |
+| `~` | パッケージ | package | 同じパッケージ内のみ |
+
+### 使用例
+
+```
+┌─────────────────────────┐
+│  BankAccount             │
+├─────────────────────────┤
+│  - balance: decimal      │ ← private
+│  # accountNumber: string │ ← protected
+│  + ownerName: string     │ ← public
+├─────────────────────────┤
+│  + deposit(amount): void │ ← public
+│  - validate(): boolean   │ ← private
+└─────────────────────────┘
+```
+
+---
+
+## 5. 多重度の実践例
+
+### 例1: 1対1（One-to-One）
+
+```
+Person 1 ──── 1 Passport
+```
+
+**意味:** 1人は1つのパスポートを持つ
+
+**コード:**
+```python
+class Person:
+    def __init__(self):
+        self.passport = Passport()  # 1つだけ
+
+class Passport:
+    def __init__(self):
+        self.number = "..."
+```
+
+---
+
+### 例2: 1対多（One-to-Many）
+
+```
+Company 1 ──── 0..* Employee
+```
+
+**意味:** 
+- 1つの会社は0人以上の従業員を持つ
+- 従業員は1つの会社に所属
+
+**コード:**
+```python
+class Company:
+    def __init__(self):
+        self.employees = []  # 0個以上
+
+class Employee:
+    def __init__(self, company):
+        self.company = company  # 1つだけ
+```
+
+---
+
+### 例3: 多対多（Many-to-Many）
+
+```
+Student * ──── * Course
+```
+
+**意味:**
+- 学生は複数のコースを履修
+- コースは複数の学生を持つ
+
+**コード:**
+```python
+class Student:
+    def __init__(self):
+        self.courses = []  # 複数
+
+class Course:
+    def __init__(self):
+        self.students = []  # 複数
+```
+
+---
+
+### 例4: 必須関連（Mandatory）
+
+```
+Order 1 ──── 1..* OrderItem
+```
+
+**意味:**
+- 注文は必ず1つ以上の明細を持つ（0個はダメ）
+
+**コード:**
+```python
+class Order:
+    def __init__(self, items):
+        if len(items) == 0:
+            raise ValueError("最低1つの明細が必要")
+        self.items = items  # 1個以上必須
+```
+
+---
+
+### 例5: 任意関連（Optional）
+
+```
+Person 1 ──── 0..1 DrivingLicense
+```
+
+**意味:**
+- 人は運転免許を持っているかもしれない（持ってないかも）
+
+**コード:**
+```python
+class Person:
+    def __init__(self):
+        self.driving_license = None  # 任意
+    
+    def set_license(self, license):
+        self.driving_license = license
+```
+
+---
+
+## 6. 実践パターン
+
+### パターン1: 継承階層
+
+```
+        Animal
+          △
+    ┌─────┼─────┐
+    │     │     │
+   Dog   Cat  Bird
+```
+
+**コード:**
+```python
+class Animal:
+    def eat(self):
+        pass
+
+class Dog(Animal):
+    def bark(self):
+        print("ワンワン")
+
+class Cat(Animal):
+    def meow(self):
+        print("ニャー")
+```
+
+---
+
+### パターン2: インターフェース実装
+
+```
+  <<interface>>
+   Drawable
+      △
+     ╱│╲ (点線)
+   ─┴─┴─
+   │  │
+Circle Square
+```
+
+**コード:**
+```python
+from abc import ABC, abstractmethod
+
+class Drawable(ABC):
+    @abstractmethod
+    def draw(self):
+        pass
+
+class Circle(Drawable):
+    def draw(self):
+        print("○を描く")
+
+class Square(Drawable):
+    def draw(self):
+        print("□を描く")
+```
+
+---
+
+### パターン3: 集約（Aggregation）
+
+```
+Department ◇────── * Employee
+```
+
+**意味:** 部署が消えても従業員は存在
+
+**コード:**
+```python
+class Department:
+    def __init__(self):
+        self.employees = []  # 空リスト
+    
+    def add_employee(self, emp):
+        self.employees.append(emp)
+
+class Employee:
+    def __init__(self, name):
+        self.name = name
+
+# 従業員は独立
+emp = Employee("太郎")
+dept = Department()
+dept.add_employee(emp)
+
+# 部署が消えても従業員は残る
+del dept
+print(emp.name)  # "太郎" - OK
+```
+
+---
+
+### パターン4: コンポジション（Composition）
+
+```
+House ◆────── * Room
+```
+
+**意味:** 家が消えたら部屋も消える
+
+**コード:**
+```python
+class House:
+    def __init__(self):
+        # 内部で作成
+        self.rooms = [
+            Room("リビング"),
+            Room("寝室"),
+            Room("キッチン")
+        ]
+
+class Room:
+    def __init__(self, name):
+        self.name = name
+
+# 家を作ると部屋も作られる
+house = House()
+
+# 家が消えると部屋も消える
+del house  # rooms も一緒に消える
+```
+
+---
+
+### パターン5: 依存（Dependency）
+
+```
+EmailService ┄┄┄→ EmailMessage
+```
+
+**意味:** EmailServiceがEmailMessageを一時的に使用
+
+**コード:**
+```python
+class EmailService:
+    def send(self, message):  # 引数で受け取る
+        print(f"送信: {message.content}")
+
+class EmailMessage:
+    def __init__(self, content):
+        self.content = content
+
+# 使用時のみ関係
+service = EmailService()
+msg = EmailMessage("こんにちは")
+service.send(msg)  # ここだけ関係
+```
+
+---
+
+## 7. 複雑な例：ECサイト
+
+```
+┌─────────────┐         ┌─────────────┐
+│  Customer   │1      * │  Order      │
+│─────────────│◇────────│─────────────│
+│- name       │         │- orderDate  │
+│- email      │         │- status     │
+└─────────────┘         └─────────────┘
+                             │ ◆
+                             │ 1
+                             │
+                             │ *
+                        ┌─────────────┐
+                        │ OrderItem   │
+                        │─────────────│
+                        │- quantity   │
+                        │- price      │
+                        └─────────────┘
+                             │
+                             │ *
+                             │
+                             │ 1
+                        ┌─────────────┐
+                        │  Product    │
+                        │─────────────│
+                        │- name       │
+                        │- price      │
+                        └─────────────┘
+```
+
+**関係:**
+- Customer ◇ Order（集約：顧客が消えても注文履歴は残る）
+- Order ◆ OrderItem（コンポジション：注文が消えたら明細も消える）
+- OrderItem → Product（関連：明細は商品を参照）
+
+**コード:**
+```python
+class Customer:
+    def __init__(self, name):
+        self.name = name
+        self.orders = []  # 集約
+    
+    def place_order(self, order):
+        self.orders.append(order)
+
+class Order:
+    def __init__(self):
+        self.order_date = datetime.now()
+        self.items = []  # コンポジション（内部で管理）
+    
+    def add_item(self, product, quantity):
+        item = OrderItem(product, quantity)  # 内部で作成
+        self.items.append(item)
+
+class OrderItem:
+    def __init__(self, product, quantity):
+        self.product = product  # 参照
+        self.quantity = quantity
+
+class Product:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
+```
+
+---
+
+## 8. よく間違えるポイント
+
+### ❌ 間違い1: 多重度の位置
+
+```
+❌ 間違い
+    1
+ClassA ──── ClassB
+    *
+
+✅ 正解
+ClassA 1 ──── * ClassB
+```
+
+多重度は**相手側**に書く！
+
+---
+
+### ❌ 間違い2: ひし形の向き
+
+```
+❌ 間違い
+Employee ◇──── Department
+
+✅ 正解
+Department ◇──── Employee
+```
+
+ひし形は**全体側（親側）**に付ける！
+
+---
+
+### ❌ 間違い3: 継承の矢印
+
+```
+❌ 間違い
+Dog ──→ Animal  (黒矢印)
+
+✅ 正解
+Dog ───△ Animal  (白抜き三角)
+```
+
+継承は**白抜き三角**を使う！
+
+---
+
+## 9. クイックリファレンス
+
+### 関係性の選び方フローチャート
+
+```
+2つのクラスの関係は？
+
+1. 片方がもう片方の「種類」？
+   YES → 継承 △
+
+2. インターフェース実装？
+   YES → 実現 △ (点線)
+
+3. 片方が片方を「所有」？
+   YES → 次へ
+   
+   3-1. 所有者が消えたら消える？
+        YES → コンポジション ◆
+        NO  → 集約 ◇
+
+4. メソッドの引数で使う程度？
+   YES → 依存 → (点線)
+
+5. その他の関係
+   → 関連 ────
+```
+
+---
+
+## 10. 実務でよく使うパターン
+
+### パターンA: ユーザーと権限
+
+```
+User 1 ──── * Role
+Role * ──── * Permission
+```
+
+```python
+class User:
+    def __init__(self, username):
+        self.username = username
+        self.roles = []
+
+class Role:
+    def __init__(self, name):
+        self.name = name
+        self.permissions = []
+
+class Permission:
+    def __init__(self, action):
+        self.action = action
+```
+
+---
+
+### パターンB: ブログシステム
+
+```
+Author 1 ──── * Article
+Article ◆──── * Comment
+Article * ──── * Tag
+```
+
+```python
+class Author:
+    def __init__(self, name):
+        self.name = name
+        self.articles = []
+
+class Article:
+    def __init__(self, title):
+        self.title = title
+        self.comments = []  # コンポジション
+        self.tags = []      # 関連
+
+class Comment:
+    def __init__(self, content):
+        self.content = content
+
+class Tag:
+    def __init__(self, name):
+        self.name = name
+```
+
+---
+
+### パターンC: 組織構造
+
+```
+        Organization
+             │ ◆
+             │ 1
+             │
+             │ *
+        Department
+             │ ◇
+             │ 1
+             │
+             │ *
+         Employee
+```
+
+```python
+class Organization:
+    def __init__(self, name):
+        self.name = name
+        self.departments = [
+            Department("営業部"),
+            Department("開発部")
+        ]
+
+class Department:
+    def __init__(self, name):
+        self.name = name
+        self.employees = []
+    
+    def add_employee(self, emp):
+        self.employees.append(emp)
+
+class Employee:
+    def __init__(self, name):
+        self.name = name
+```
+
+---
+
+## 11. チートシート（印刷用）
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+UML クラス図 チートシート
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【多重度】
+1      : ちょうど1
+0..1   : 0または1（任意）
+*      : 0以上（何個でも）
+1..*   : 1以上
+2..5   : 2から5
+
+【関係性】
+───△   継承（Inheritance）
+┄┄┄△   実現（Realization）
+────   関連（Association）
+◇────   集約（Aggregation）- 弱い
+◆────   コンポジション（Composition）- 強い
+┄┄┄→   依存（Dependency）
+
+【可視性】
++  public    : どこからでも
+-  private   : クラス内のみ
+#  protected : 継承先まで
+~  package   : パッケージ内
+
+【ひし形の覚え方】
+◇ 白抜き = 弱い = 独立
+◆ 黒塗り = 強い = 依存
+
+【多重度の位置】
+ClassA 1 ──── * ClassB
+       ↑相手  ↑自分
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 12. 練習問題
+
+### 問題1
+以下の要件をクラス図で表現してください：
+- 図書館は複数の本を持つ
+- 本は複数の著者を持つ
+- 本は1つのISBNを持つ
+
+<details>
+<summary>解答</summary>
+
+```
+Library 1 ◇──── * Book
+Book * ──── * Author
+Book 1 ──── 1 ISBN
+```
+
+</details>
+
+---
+
+### 問題2
+どちらを使うべき？
+- 車とエンジン: 集約 or コンポジション？
+- プレイリストと曲: 集約 or コンポジション？
+
+<details>
+<summary>解答</summary>
+
+- 車 ◆ エンジン → **コンポジション**（車が壊れたらエンジンも終わり）
+- プレイリスト ◇ 曲 → **集約**（曲は独立して存在）
+
+</details>
+
+---
+
+## まとめ
+
+### 重要ポイント
+
+1. **多重度は相手側に書く**
+2. **ひし形は全体側（親側）に付ける**
+3. **白抜き = 弱い、黒塗り = 強い**
+4. **継承は白抜き三角**
+5. **可視性（+, -, #）を忘れずに**
+
+### 実務で大事なこと
+
+- 過度に詳細にしない
+- 重要な関係だけ描く
+- チームで記法を統一
+- ツール（PlantUML、draw.io等）を活用
+
+---
+
+**参考資料:**
+- UML 2.5 仕様書
+- Martin Fowler "UML Distilled"
+
+**タグ:** `#UML` `#クラス図` `#設計` `#チートシート`
