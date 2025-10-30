@@ -1,0 +1,528 @@
+# Pythonのメソッド3種類：完全理解ガイド
+
+## 1. 3種類のメソッドを比較
+
+```python
+class MyClass:
+    class_variable = "クラス変数"
+    
+    # ① インスタンスメソッド（普通のメソッド）
+    def instance_method(self):
+        return f"インスタンスメソッド: {self}"
+    
+    # ② クラスメソッド
+    @classmethod
+    def class_method(cls):
+        return f"クラスメソッド: {cls}"
+    
+    # ③ 静的メソッド（スタティックメソッド）
+    @staticmethod
+    def static_method():
+        return "静的メソッド"
+
+
+# 実行
+obj = MyClass()
+
+print(obj.instance_method())  # インスタンス経由
+print(MyClass.class_method()) # クラス経由
+print(MyClass.static_method()) # クラス経由（インスタンス不要）
+```
+
+---
+
+## 2. インスタンスメソッド（普通のメソッド）
+
+**特徴：**
+- 第一引数は `self`（インスタンス自身）
+- インスタンス変数にアクセスできる
+- **一番よく使う**
+
+```python
+class Dog:
+    def __init__(self, name, age):
+        self.name = name  # インスタンス変数
+        self.age = age
+    
+    # インスタンスメソッド
+    def bark(self):
+        """インスタンスのデータを使う"""
+        print(f"{self.name}がワンワン！")
+    
+    def get_info(self):
+        """インスタンスのデータを返す"""
+        return f"{self.name}は{self.age}歳です"
+
+
+# 使用例
+dog1 = Dog("ポチ", 3)
+dog2 = Dog("タロー", 5)
+
+dog1.bark()  # ポチがワンワン！
+dog2.bark()  # タローがワンワン！
+
+print(dog1.get_info())  # ポチは3歳です
+```
+
+**いつ使う？**
+- インスタンスごとに違う動作をする時
+- `self.変数` を使う時
+- **ほとんどの場合はこれ**
+
+---
+
+## 3. クラスメソッド（@classmethod）
+
+**特徴：**
+- 第一引数は `cls`（クラス自身）
+- クラス変数にアクセスできる
+- インスタンスなしで呼べる
+- **ファクトリーメソッド**（別の作り方）でよく使う
+
+```python
+class Person:
+    population = 0  # クラス変数（全員で共有）
+    
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+        Person.population += 1
+    
+    @classmethod
+    def get_population(cls):
+        """総人口を返す（クラスメソッド）"""
+        return f"現在の人口: {cls.population}人"
+    
+    @classmethod
+    def from_birth_year(cls, name, birth_year):
+        """生まれ年から作成（ファクトリーメソッド）"""
+        age = 2025 - birth_year
+        return cls(name, age)  # cls() で新しいインスタンスを作る
+
+
+# 使用例
+print(Person.get_population())  # 現在の人口: 0人
+
+person1 = Person("田中", 30)
+person2 = Person("鈴木", 25)
+
+print(Person.get_population())  # 現在の人口: 2人
+
+# ファクトリーメソッド（別の作り方）
+person3 = Person.from_birth_year("佐藤", 1990)
+print(f"{person3.name}は{person3.age}歳")  # 佐藤は35歳
+print(Person.get_population())  # 現在の人口: 3人
+```
+
+**いつ使う？**
+- クラス変数を操作する時
+- 別の作り方（コンストラクタ）を提供する時
+- インスタンスのデータは不要だけどクラス情報は必要な時
+
+---
+
+## 4. 静的メソッド（@staticmethod）
+
+**特徴：**
+- `self` も `cls` も **受け取らない**
+- インスタンス変数にもクラス変数にもアクセスしない
+- **ただの関数**だけどクラスの中に置きたい時に使う
+
+```python
+class MathUtils:
+    """数学のユーティリティクラス"""
+    
+    @staticmethod
+    def add(a, b):
+        """足し算（クラスやインスタンスと無関係）"""
+        return a + b
+    
+    @staticmethod
+    def is_even(n):
+        """偶数かチェック"""
+        return n % 2 == 0
+    
+    @staticmethod
+    def celsius_to_fahrenheit(celsius):
+        """摂氏→華氏変換"""
+        return (celsius * 9/5) + 32
+
+
+# 使用例（インスタンス不要）
+print(MathUtils.add(5, 3))  # 8
+print(MathUtils.is_even(10))  # True
+print(MathUtils.celsius_to_fahrenheit(25))  # 77.0
+
+# インスタンスからも呼べる（が、普通はしない）
+utils = MathUtils()
+print(utils.add(2, 3))  # 5（でも意味がない）
+```
+
+**いつ使う？**
+- クラスに関連する機能だけど、`self` や `cls` を使わない時
+- ユーティリティ関数をグループ化したい時
+- **正直、普通の関数でもいい場合が多い**
+
+---
+
+## 5. 実践例：日付クラス
+
+```python
+from datetime import datetime
+
+class DateUtil:
+    """日付を扱うクラス"""
+    
+    def __init__(self, year, month, day):
+        """インスタンスメソッド用のデータ"""
+        self.year = year
+        self.month = month
+        self.day = day
+    
+    # ① インスタンスメソッド
+    def format_date(self):
+        """このインスタンスの日付を整形"""
+        return f"{self.year}年{self.month}月{self.day}日"
+    
+    def days_until_new_year(self):
+        """このインスタンスの日付から年末までの日数"""
+        current = datetime(self.year, self.month, self.day)
+        new_year = datetime(self.year + 1, 1, 1)
+        return (new_year - current).days
+    
+    # ② クラスメソッド
+    @classmethod
+    def today(cls):
+        """今日の日付でインスタンスを作る（ファクトリーメソッド）"""
+        now = datetime.now()
+        return cls(now.year, now.month, now.day)
+    
+    @classmethod
+    def from_string(cls, date_string):
+        """文字列から作成（例: "2025-12-25"）"""
+        year, month, day = map(int, date_string.split('-'))
+        return cls(year, month, day)
+    
+    # ③ 静的メソッド
+    @staticmethod
+    def is_leap_year(year):
+        """うるう年かチェック（年だけわかればOK）"""
+        return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+    
+    @staticmethod
+    def days_in_month(year, month):
+        """指定月の日数"""
+        if month in [1, 3, 5, 7, 8, 10, 12]:
+            return 31
+        elif month in [4, 6, 9, 11]:
+            return 30
+        else:  # 2月
+            return 29 if DateUtil.is_leap_year(year) else 28
+
+
+# 使用例
+print("=== インスタンスメソッド ===")
+date1 = DateUtil(2025, 10, 30)
+print(date1.format_date())  # 2025年10月30日
+print(f"年末まで: {date1.days_until_new_year()}日")
+
+print("\n=== クラスメソッド ===")
+today = DateUtil.today()
+print(f"今日: {today.format_date()}")
+
+christmas = DateUtil.from_string("2025-12-25")
+print(f"クリスマス: {christmas.format_date()}")
+
+print("\n=== 静的メソッド ===")
+print(f"2024年はうるう年? {DateUtil.is_leap_year(2024)}")  # True
+print(f"2025年はうるう年? {DateUtil.is_leap_year(2025)}")  # False
+print(f"2025年2月の日数: {DateUtil.days_in_month(2025, 2)}日")  # 28
+```
+
+---
+
+## 6. 違いを視覚的に理解
+
+```python
+class Example:
+    class_var = "クラス変数"
+    
+    def __init__(self, value):
+        self.instance_var = value
+    
+    # ① インスタンスメソッド
+    def instance_method(self):
+        print(f"self = {self}")
+        print(f"インスタンス変数: {self.instance_var}")
+        print(f"クラス変数: {self.class_var}")
+    
+    # ② クラスメソッド
+    @classmethod
+    def class_method(cls):
+        print(f"cls = {cls}")
+        # print(self.instance_var)  # ❌ エラー！selfがない
+        print(f"クラス変数: {cls.class_var}")
+    
+    # ③ 静的メソッド
+    @staticmethod
+    def static_method():
+        # print(self)  # ❌ エラー！
+        # print(cls)   # ❌ エラー！
+        print("selfもclsもない！")
+
+
+# 実験
+obj = Example("インスタンス値")
+
+print("=== インスタンスメソッド ===")
+obj.instance_method()
+
+print("\n=== クラスメソッド ===")
+Example.class_method()
+
+print("\n=== 静的メソッド ===")
+Example.static_method()
+```
+
+**実行結果：**
+```
+=== インスタンスメソッド ===
+self = <__main__.Example object at 0x...>
+インスタンス変数: インスタンス値
+クラス変数: クラス変数
+
+=== クラスメソッド ===
+cls = <class '__main__.Example'>
+クラス変数: クラス変数
+
+=== 静的メソッド ===
+selfもclsもない！
+```
+
+---
+
+## 7. 実用例：ユーザー管理システム
+
+```python
+import hashlib
+from datetime import datetime
+
+class User:
+    """ユーザークラス"""
+    
+    # クラス変数
+    all_users = []
+    total_logins = 0
+    
+    def __init__(self, username, email):
+        self.username = username
+        self.email = email
+        self.created_at = datetime.now()
+        self._password_hash = None
+        User.all_users.append(self)
+    
+    # ① インスタンスメソッド
+    def set_password(self, password):
+        """パスワードを設定（このユーザーのみ）"""
+        if not self.is_valid_password(password):
+            raise ValueError("パスワードは8文字以上必要です")
+        self._password_hash = hashlib.sha256(password.encode()).hexdigest()
+    
+    def check_password(self, password):
+        """パスワード確認（このユーザーのみ）"""
+        test_hash = hashlib.sha256(password.encode()).hexdigest()
+        return test_hash == self._password_hash
+    
+    def login(self):
+        """ログイン（このユーザー）"""
+        User.total_logins += 1
+        print(f"✅ {self.username}がログインしました")
+    
+    # ② クラスメソッド
+    @classmethod
+    def get_user_count(cls):
+        """全ユーザー数を取得"""
+        return len(cls.all_users)
+    
+    @classmethod
+    def find_by_username(cls, username):
+        """ユーザー名で検索"""
+        for user in cls.all_users:
+            if user.username == username:
+                return user
+        return None
+    
+    @classmethod
+    def get_total_logins(cls):
+        """総ログイン回数"""
+        return cls.total_logins
+    
+    # ③ 静的メソッド
+    @staticmethod
+    def is_valid_email(email):
+        """メールアドレスの妥当性チェック"""
+        return '@' in email and '.' in email.split('@')[1]
+    
+    @staticmethod
+    def is_valid_password(password):
+        """パスワードの妥当性チェック"""
+        return len(password) >= 8
+    
+    @staticmethod
+    def generate_username(first_name, last_name):
+        """ユーザー名を自動生成"""
+        return f"{first_name.lower()}.{last_name.lower()}"
+
+
+# 使用例
+print("=== ユーザー作成 ===")
+user1 = User("tanaka", "tanaka@example.com")
+user2 = User("suzuki", "suzuki@example.com")
+
+user1.set_password("password123")
+user2.set_password("securepass456")
+
+print("\n=== インスタンスメソッド ===")
+user1.login()
+user1.login()
+user2.login()
+
+print(f"\nパスワード確認: {user1.check_password('password123')}")  # True
+
+print("\n=== クラスメソッド ===")
+print(f"ユーザー数: {User.get_user_count()}人")
+print(f"総ログイン回数: {User.get_total_logins()}回")
+
+found_user = User.find_by_username("tanaka")
+if found_user:
+    print(f"見つかりました: {found_user.username}")
+
+print("\n=== 静的メソッド ===")
+print(f"メール検証: {User.is_valid_email('test@example.com')}")  # True
+print(f"メール検証: {User.is_valid_email('invalid-email')}")      # False
+
+print(f"パスワード検証: {User.is_valid_password('short')}")       # False
+print(f"パスワード検証: {User.is_valid_password('longenough')}")  # True
+
+print(f"ユーザー名生成: {User.generate_username('太郎', '山田')}")
+```
+
+---
+
+## 8. 選び方フローチャート
+
+```
+質問：「self（インスタンス）のデータを使う？」
+  ↓
+YES → インスタンスメソッド
+  |   def method(self):
+  |
+NO
+  ↓
+質問：「cls（クラス）の情報を使う？」
+  ↓
+YES → クラスメソッド
+  |   @classmethod
+  |   def method(cls):
+  |
+NO
+  ↓
+質問：「ただの関数だけどクラスに関連？」
+  ↓
+YES → 静的メソッド
+      @staticmethod
+      def method():
+```
+
+---
+
+## 9. よくある間違い
+
+### ❌ 間違い1：staticmethodでselfを使おうとする
+
+```python
+class Wrong:
+    def __init__(self):
+        self.value = 10
+    
+    @staticmethod
+    def bad_method():
+        return self.value  # ❌ エラー！selfがない
+```
+
+### ✅ 正解：インスタンスメソッドにする
+
+```python
+class Correct:
+    def __init__(self):
+        self.value = 10
+    
+    def good_method(self):
+        return self.value  # ✅ OK
+```
+
+---
+
+### ❌ 間違い2：classmethodなのにclsを使わない
+
+```python
+class Wrong:
+    count = 0
+    
+    @classmethod
+    def increment(cls):
+        count += 1  # ❌ エラー！ローカル変数
+```
+
+### ✅ 正解：cls.変数
+
+```python
+class Correct:
+    count = 0
+    
+    @classmethod
+    def increment(cls):
+        cls.count += 1  # ✅ OK
+```
+
+---
+
+## 10. まとめ表
+
+| 種類 | 第一引数 | アクセス可能 | 呼び出し方 | 用途 |
+|------|----------|------------|-----------|------|
+| **インスタンスメソッド** | `self` | インスタンス変数<br>クラス変数 | `obj.method()` | 通常の処理（一番多い） |
+| **クラスメソッド** | `cls` | クラス変数のみ | `Class.method()` | ファクトリーメソッド<br>クラス情報の操作 |
+| **静的メソッド** | なし | なし | `Class.method()` | ユーティリティ関数 |
+
+---
+
+## 11. 練習問題
+
+```python
+class Calculator:
+    """
+    要件:
+    - クラス変数: calculation_count（計算実行回数）
+    - インスタンスメソッド: calculate(a, b, operation)
+      → 計算を実行してcalculation_countを増やす
+    - クラスメソッド: get_count()
+      → 計算実行回数を返す
+    - 静的メソッド: is_valid_operation(operation)
+      → 演算子(+, -, *, /)が有効かチェック
+    """
+    pass
+
+# テスト
+calc1 = Calculator()
+calc2 = Calculator()
+
+calc1.calculate(10, 5, '+')  # 15
+calc2.calculate(20, 4, '*')  # 80
+
+print(Calculator.get_count())  # 2
+print(Calculator.is_valid_operation('+'))  # True
+print(Calculator.is_valid_operation('%'))  # False
+```
+
+頑張ってください！💪
