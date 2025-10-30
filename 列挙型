@@ -1,0 +1,581 @@
+# 列挙型（Enum）完全ガイド 🎓
+
+---
+
+## 📘 日本語セクション - 新人エンジニア向け
+
+### 列挙型って何？
+
+**列挙型（Enum）= 決まった選択肢の集まり**
+
+例えば：
+- 信号機 → 「赤」「黄」「青」の3つだけ
+- 曜日 → 「月」「火」「水」...「日」の7つだけ
+- 性別 → 「男性」「女性」「その他」の3つだけ
+
+**プログラムで「この3つ以外は使えない！」と決めるのが列挙型です。**
+
+---
+
+### なぜ列挙型を使うの？
+
+#### ❌ 悪い例：文字列を直接使う
+
+```python
+# 文字列で性別を管理（危険！）
+gender = "男性"
+gender = "男"      # タイポ！でもエラーにならない
+gender = "Male"    # 英語で書いちゃった！
+gender = "おとこ"  # バリエーション多すぎ！
+```
+
+**問題点：**
+- タイポ（typo：打ち間違い）に気づけない
+- 人によって書き方がバラバラ
+- バグの温床になる
+
+#### ✅ 良い例：列挙型を使う
+
+```python
+from enum import Enum
+
+class Gender(Enum):
+    MALE = "男性"
+    FEMALE = "女性"
+    OTHER = "その他"
+
+# 使い方
+gender = Gender.MALE  # これしか選べない！
+# gender = Gender.MAN  # エラー！存在しない選択肢
+```
+
+**メリット：**
+- ✅ タイポしたら即エラー
+- ✅ 選択肢が明確
+- ✅ IDEで候補が出る（補完機能）
+
+---
+
+### 列挙型の基本的な書き方
+
+```python
+from enum import Enum
+
+# Step 1: Enumクラスを継承
+class TrafficLight(Enum):
+    # Step 2: 選択肢を定義（大文字＋アンダースコアが慣習）
+    RED = "赤"      # RED が名前、"赤" が値
+    YELLOW = "黄"
+    GREEN = "青"
+
+# Step 3: 使う
+light = TrafficLight.RED
+print(light)        # TrafficLight.RED
+print(light.name)   # RED
+print(light.value)  # 赤
+```
+
+---
+
+### 実践例：曜日を列挙型で管理
+
+```python
+from enum import Enum
+
+class Weekday(Enum):
+    """曜日を表す列挙型"""
+    MONDAY = "月曜日"
+    TUESDAY = "火曜日"
+    WEDNESDAY = "水曜日"
+    THURSDAY = "木曜日"
+    FRIDAY = "金曜日"
+    SATURDAY = "土曜日"
+    SUNDAY = "日曜日"
+
+# 使用例
+today = Weekday.MONDAY
+print(f"今日は{today.value}です")  # 今日は月曜日です
+
+# 曜日ごとに処理を分ける
+if today == Weekday.SATURDAY or today == Weekday.SUNDAY:
+    print("週末だ！休もう！")
+else:
+    print("仕事の日...")
+```
+
+---
+
+### 列挙型で数値も使える
+
+```python
+from enum import Enum
+
+class Priority(Enum):
+    """優先度を表す列挙型"""
+    LOW = 1      # 低
+    MEDIUM = 2   # 中
+    HIGH = 3     # 高
+    CRITICAL = 4 # 緊急
+
+# 使用例
+task_priority = Priority.HIGH
+print(task_priority.value)  # 3
+
+# 数値で比較
+if task_priority.value >= 3:
+    print("重要なタスクです！")
+```
+
+---
+
+### 列挙型の便利な機能
+
+#### 1. すべての選択肢を取得
+
+```python
+from enum import Enum
+
+class Color(Enum):
+    RED = "赤"
+    BLUE = "青"
+    GREEN = "緑"
+
+# すべての色を表示
+for color in Color:
+    print(f"{color.name}: {color.value}")
+
+# 出力:
+# RED: 赤
+# BLUE: 青
+# GREEN: 緑
+```
+
+#### 2. 文字列から列挙型に変換
+
+```python
+from enum import Enum
+
+class Size(Enum):
+    SMALL = "S"
+    MEDIUM = "M"
+    LARGE = "L"
+
+# 文字列 "SMALL" から列挙型に変換
+size = Size["SMALL"]
+print(size.value)  # S
+
+# 値 "M" から列挙型を探す
+size = Size("M")
+print(size)  # Size.MEDIUM
+```
+
+---
+
+### よくある間違いと対処法
+
+#### ❌ 間違い1：値を直接代入
+
+```python
+class Status(Enum):
+    ACTIVE = "有効"
+    INACTIVE = "無効"
+
+# ❌ これはダメ！
+status = "有効"
+
+# ✅ こうする！
+status = Status.ACTIVE
+```
+
+#### ❌ 間違い2：列挙型の値を変更しようとする
+
+```python
+class Color(Enum):
+    RED = "赤"
+
+# ❌ これはエラー！列挙型は変更不可
+# Color.RED = "青"
+
+# 列挙型は「不変（immutable）」= 変更できない
+```
+
+#### ❌ 間違い3：比較を間違える
+
+```python
+class Gender(Enum):
+    MALE = "男性"
+
+gender = Gender.MALE
+
+# ❌ 値で比較するのはNG
+if gender == "男性":  # False になる！
+    print("男性です")
+
+# ✅ 列挙型同士で比較
+if gender == Gender.MALE:  # これが正解
+    print("男性です")
+
+# ✅ または値を取り出して比較
+if gender.value == "男性":
+    print("男性です")
+```
+
+---
+
+### 実践：役職の列挙型（複数の値を持つ）
+
+```python
+from enum import Enum
+
+class Post(Enum):
+    """役職を表す列挙型（複数の情報を保持）"""
+    # (順序, 役職名, 手当)
+    GENERAL = (0, "一般", 0)
+    CHIEF = (1, "主任", 20000)
+    MANAGER = (2, "課長", 50000)
+    
+    def __init__(self, order, title, allowance):
+        """複数の値を持つ列挙型の初期化"""
+        self.order = order          # 順序
+        self.title = title          # 役職名
+        self.allowance = allowance  # 手当
+
+# 使用例
+post = Post.CHIEF
+print(post.title)      # 主任
+print(post.allowance)  # 20000
+print(post.order)      # 1
+```
+
+---
+
+### まとめチェックリスト ✅
+
+新人エンジニアが覚えるべきこと：
+
+1. ✅ **列挙型は「決まった選択肢」を表す**
+2. ✅ **`from enum import Enum` でインポート**
+3. ✅ **`class 名前(Enum):` で定義**
+4. ✅ **`.name` で名前、`.value` で値を取得**
+5. ✅ **文字列ではなく列挙型で比較する**
+6. ✅ **タイポ防止・保守性向上のために使う**
+
+---
+
+## 📘 English Section - For Junior Engineers
+
+### What is Enum?
+
+**Enum (Enumeration) = A fixed set of choices**
+
+For example:
+- Traffic Light → Only "Red", "Yellow", "Green"
+- Days of Week → Only "Mon", "Tue", ... "Sun"
+- Gender → Only "Male", "Female", "Other"
+
+**Enum restricts values to predefined options in your program.**
+
+---
+
+### Why Use Enum?
+
+#### ❌ Bad Example: Using Raw Strings
+
+```python
+# Using strings directly (Dangerous!)
+gender = "Male"
+gender = "male"     # Typo! But no error
+gender = "M"        # Inconsistent!
+gender = "man"      # Too many variations!
+```
+
+**Problems:**
+- Typos go unnoticed
+- Inconsistent usage
+- Source of bugs
+
+#### ✅ Good Example: Using Enum
+
+```python
+from enum import Enum
+
+class Gender(Enum):
+    MALE = "Male"
+    FEMALE = "Female"
+    OTHER = "Other"
+
+# Usage
+gender = Gender.MALE  # Only valid options!
+# gender = Gender.MAN  # Error! Doesn't exist
+```
+
+**Benefits:**
+- ✅ Immediate error on typos
+- ✅ Clear choices
+- ✅ IDE autocomplete support
+
+---
+
+### Basic Enum Syntax
+
+```python
+from enum import Enum
+
+# Step 1: Inherit from Enum
+class TrafficLight(Enum):
+    # Step 2: Define options (UPPERCASE convention)
+    RED = "red"       # RED is name, "red" is value
+    YELLOW = "yellow"
+    GREEN = "green"
+
+# Step 3: Use it
+light = TrafficLight.RED
+print(light)        # TrafficLight.RED
+print(light.name)   # RED
+print(light.value)  # red
+```
+
+---
+
+### Practical Example: Days of Week
+
+```python
+from enum import Enum
+
+class Weekday(Enum):
+    """Enum representing days of the week"""
+    MONDAY = "Monday"
+    TUESDAY = "Tuesday"
+    WEDNESDAY = "Wednesday"
+    THURSDAY = "Thursday"
+    FRIDAY = "Friday"
+    SATURDAY = "Saturday"
+    SUNDAY = "Sunday"
+
+# Usage
+today = Weekday.MONDAY
+print(f"Today is {today.value}")  # Today is Monday
+
+# Conditional logic
+if today == Weekday.SATURDAY or today == Weekday.SUNDAY:
+    print("It's the weekend!")
+else:
+    print("It's a workday...")
+```
+
+---
+
+### Enum with Numeric Values
+
+```python
+from enum import Enum
+
+class Priority(Enum):
+    """Priority levels"""
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    CRITICAL = 4
+
+# Usage
+task_priority = Priority.HIGH
+print(task_priority.value)  # 3
+
+# Numeric comparison
+if task_priority.value >= 3:
+    print("Important task!")
+```
+
+---
+
+### Useful Enum Features
+
+#### 1. Iterate All Options
+
+```python
+from enum import Enum
+
+class Color(Enum):
+    RED = "red"
+    BLUE = "blue"
+    GREEN = "green"
+
+# Display all colors
+for color in Color:
+    print(f"{color.name}: {color.value}")
+
+# Output:
+# RED: red
+# BLUE: blue
+# GREEN: green
+```
+
+#### 2. Convert String to Enum
+
+```python
+from enum import Enum
+
+class Size(Enum):
+    SMALL = "S"
+    MEDIUM = "M"
+    LARGE = "L"
+
+# Convert string "SMALL" to Enum
+size = Size["SMALL"]
+print(size.value)  # S
+
+# Find Enum by value "M"
+size = Size("M")
+print(size)  # Size.MEDIUM
+```
+
+---
+
+### Common Mistakes and Solutions
+
+#### ❌ Mistake 1: Assigning Raw Values
+
+```python
+class Status(Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
+# ❌ Don't do this!
+status = "active"
+
+# ✅ Do this!
+status = Status.ACTIVE
+```
+
+#### ❌ Mistake 2: Trying to Modify Enum
+
+```python
+class Color(Enum):
+    RED = "red"
+
+# ❌ This raises an error! Enums are immutable
+# Color.RED = "blue"
+
+# Enums are immutable (cannot be changed)
+```
+
+#### ❌ Mistake 3: Wrong Comparison
+
+```python
+class Gender(Enum):
+    MALE = "Male"
+
+gender = Gender.MALE
+
+# ❌ Comparing with value is wrong
+if gender == "Male":  # Returns False!
+    print("Male")
+
+# ✅ Compare Enum to Enum
+if gender == Gender.MALE:  # Correct
+    print("Male")
+
+# ✅ Or extract value and compare
+if gender.value == "Male":
+    print("Male")
+```
+
+---
+
+### Advanced: Enum with Multiple Values
+
+```python
+from enum import Enum
+
+class Post(Enum):
+    """Job position with multiple attributes"""
+    # (order, title, allowance)
+    GENERAL = (0, "General", 0)
+    CHIEF = (1, "Chief", 20000)
+    MANAGER = (2, "Manager", 50000)
+    
+    def __init__(self, order, title, allowance):
+        """Initialize Enum with multiple values"""
+        self.order = order          # Order
+        self.title = title          # Job title
+        self.allowance = allowance  # Salary allowance
+
+# Usage
+post = Post.CHIEF
+print(post.title)      # Chief
+print(post.allowance)  # 20000
+print(post.order)      # 1
+```
+
+---
+
+### Summary Checklist ✅
+
+What Junior Engineers Should Remember:
+
+1. ✅ **Enum represents "fixed choices"**
+2. ✅ **Import with `from enum import Enum`**
+3. ✅ **Define with `class Name(Enum):`**
+4. ✅ **Access name with `.name`, value with `.value`**
+5. ✅ **Compare using Enum, not strings**
+6. ✅ **Use for typo prevention and maintainability**
+
+---
+
+## 🎯 実践問題（Practice Exercises）
+
+### 問題1：HTTPステータスコードを列挙型で作る
+**Create HTTP status codes as Enum**
+
+```python
+from enum import Enum
+
+class HttpStatus(Enum):
+    """HTTPステータスコード / HTTP Status Codes"""
+    OK = 200
+    CREATED = 201
+    BAD_REQUEST = 400
+    UNAUTHORIZED = 401
+    NOT_FOUND = 404
+    INTERNAL_SERVER_ERROR = 500
+
+# 使用例 / Usage
+status = HttpStatus.OK
+print(f"Status: {status.value}")  # Status: 200
+
+if status == HttpStatus.OK:
+    print("Success!")
+```
+
+### 問題2：季節を列挙型で作る
+**Create seasons as Enum**
+
+```python
+from enum import Enum
+
+class Season(Enum):
+    """季節 / Seasons"""
+    SPRING = "春 / Spring"
+    SUMMER = "夏 / Summer"
+    AUTUMN = "秋 / Autumn"
+    WINTER = "冬 / Winter"
+
+# 使用例 / Usage
+current_season = Season.SPRING
+print(current_season.value)  # 春 / Spring
+```
+
+---
+
+## 🚀 次のステップ（Next Steps）
+
+列挙型をマスターしたら、次はこれを学びましょう！
+
+**After mastering Enum, learn these next:**
+
+1. **データクラス（Dataclasses）** - 複雑なデータ構造
+2. **型ヒント（Type Hints）** - `def func(gender: Gender):`
+3. **デザインパターン** - 列挙型を使った設計
+
+質問があればどうぞ！ 🎓
+**Feel free to ask questions!** 🎓
