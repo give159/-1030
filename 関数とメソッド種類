@@ -1,0 +1,456 @@
+"""
+selfと関数（メソッド）完全理解ガイド
+Complete Guide to self and Functions (Methods)
+
+新人エンジニア向け / For New Engineers
+"""
+
+print("=" * 80)
+print("selfと関数 完全ガイド / Complete Guide to self and Functions")
+print("=" * 80)
+
+# ============================================================================
+# セクション1: まず普通の関数から / Section 1: Start with Normal Functions
+# ============================================================================
+print("\n【セクション1: 普通の関数】")
+print("【Section 1: Normal Functions】\n")
+
+# 普通の関数（クラスの外）
+# Normal function (outside class)
+def greet(name):
+    # 引数nameを受け取って表示
+    # Receive argument name and display
+    print(f"  Hello, {name}!")
+
+# 関数を呼ぶ
+# Call function
+print("greet('Tanaka')  ← 引数を1つ渡す")
+print("greet('Tanaka')  ← Pass 1 argument")
+greet("Tanaka")
+
+print("\n✓ ポイント / Key Point:")
+print("  普通の関数は引数を明示的に渡す")
+print("  Normal functions explicitly pass arguments")
+
+# ============================================================================
+# セクション2: クラスの中の関数 = メソッド / Section 2: Functions in Class = Methods
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション2: クラスの中の関数 = メソッド】")
+print("【Section 2: Functions in Class = Methods】\n")
+
+# クラスを定義
+# Define class
+class Person:
+    # クラスの中の関数 = メソッド
+    # Function in class = method
+    def greet(self, name):  # ← self が必要！
+        # selfは自分自身のオブジェクト
+        # self is the object itself
+        print(f"  Hello, {name}!")
+
+# オブジェクトを作成
+# Create object
+person = Person()
+
+# メソッドを呼ぶ
+# Call method
+print("person.greet('Tanaka')  ← 引数は1つだけ渡す")
+print("person.greet('Tanaka')  ← Pass only 1 argument")
+person.greet("Tanaka")
+
+print("\n❓ 疑問 / Question:")
+print("  def greet(self, name): には2つの引数がある")
+print("  There are 2 arguments in def greet(self, name):")
+print("  でも、呼ぶときは person.greet('Tanaka') で1つだけ？")
+print("  But when calling, only pass 1 argument: person.greet('Tanaka')?")
+
+print("\n💡 答え / Answer:")
+print("  self は Python が自動的に渡してくれる！")
+print("  Python automatically passes self!")
+
+# ============================================================================
+# セクション3: self の正体 / Section 3: What is self?
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション3: self の正体】")
+print("【Section 3: What is self?】\n")
+
+# selfの確認用クラス
+# Class to check self
+class Demo:
+    def show_self(self):
+        # selfが何かを表示
+        # Display what self is
+        print(f"  self = {self}")
+        print(f"  type(self) = {type(self)}")
+
+# オブジェクトを作成
+# Create object
+demo = Demo()
+
+print("demo = Demo()  ← demoオブジェクトを作成")
+print("demo = Demo()  ← Create demo object")
+print(f"demo = {demo}")
+
+print("\ndemo.show_self()  ← メソッドを呼ぶ")
+print("demo.show_self()  ← Call method")
+demo.show_self()
+
+print("\n✓ 発見 / Discovery:")
+print("  self = demo と同じ！")
+print("  self = same as demo!")
+print("  つまり、self は呼び出したオブジェクト自身")
+print("  In other words, self is the object that called the method")
+
+# ============================================================================
+# セクション4: self がないとどうなる？ / Section 4: What happens without self?
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション4: self がないとどうなる？】")
+print("【Section 4: What happens without self?】\n")
+
+# selfなしのクラス（エラー例）
+# Class without self (error example)
+class BadClass:
+    def bad_method():  # ← self がない！
+        print("  This will cause an error")
+
+# オブジェクトを作成
+# Create object
+bad = BadClass()
+
+print("bad.bad_method()  ← これはエラーになる")
+print("bad.bad_method()  ← This will cause an error")
+
+# エラーをキャッチ
+# Catch error
+try:
+    bad.bad_method()
+except TypeError as e:
+    print(f"  ❌ Error: {e}")
+
+print("\n✓ 理由 / Reason:")
+print("  Python は自動的に self を渡そうとするが、")
+print("  Python tries to automatically pass self, but")
+print("  メソッドに self がないので受け取れない！")
+print("  The method doesn't have self to receive it!")
+
+# ============================================================================
+# セクション5: self で自分のデータにアクセス / Section 5: Access Own Data with self
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション5: self で自分のデータにアクセス】")
+print("【Section 5: Access Own Data with self】\n")
+
+# 自分のデータを持つクラス
+# Class with own data
+class Student:
+    def __init__(self, name, age):
+        # self.name = 自分の name 属性
+        # self.name = own name attribute
+        self.name = name
+        self.age = age
+        print(f"  Created: {self.name}, {self.age} years old")
+    
+    def introduce(self):
+        # self.name で自分のnameにアクセス
+        # Access own name with self.name
+        print(f"  Hello! I'm {self.name}, {self.age} years old")
+
+# 2人の学生を作成
+# Create 2 students
+print("student1 = Student('Tanaka', 20)")
+student1 = Student("Tanaka", 20)
+
+print("\nstudent2 = Student('Sato', 22)")
+student2 = Student("Sato", 22)
+
+print("\nstudent1.introduce()  ← student1 が自己紹介")
+print("student1.introduce()  ← student1 introduces itself")
+student1.introduce()
+
+print("\nstudent2.introduce()  ← student2 が自己紹介")
+print("student2.introduce()  ← student2 introduces itself")
+student2.introduce()
+
+print("\n✓ ポイント / Key Point:")
+print("  同じ introduce() メソッドだが、")
+print("  Same introduce() method, but")
+print("  self が違うので、違うデータを表示する")
+print("  Different self means different data is displayed")
+
+# ============================================================================
+# セクション6: self で自分のメソッドを呼ぶ / Section 6: Call Own Methods with self
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション6: self で自分のメソッドを呼ぶ】")
+print("【Section 6: Call Own Methods with self】\n")
+
+# メソッドから別のメソッドを呼ぶ
+# Call another method from a method
+class Calculator:
+    def add(self, a, b):
+        # 足し算
+        # Addition
+        result = a + b
+        print(f"  {a} + {b} = {result}")
+        return result
+    
+    def add_and_double(self, a, b):
+        # 足し算してから2倍にする
+        # Add then double
+        print("  Step 1: Add")
+        # self.add() で自分のaddメソッドを呼ぶ
+        # Call own add method with self.add()
+        sum_result = self.add(a, b)
+        
+        print("  Step 2: Double")
+        result = sum_result * 2
+        print(f"  {sum_result} * 2 = {result}")
+        return result
+
+# 計算機オブジェクトを作成
+# Create calculator object
+calc = Calculator()
+
+print("calc.add_and_double(3, 5)")
+result = calc.add_and_double(3, 5)
+
+print("\n✓ ポイント / Key Point:")
+print("  self.add() で自分の他のメソッドを呼べる")
+print("  Can call own other methods with self.add()")
+
+# ============================================================================
+# セクション7: 実際の書き方 vs 内部の動き / Section 7: Actual Code vs Internal Behavior
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション7: 実際の書き方 vs 内部の動き】")
+print("【Section 7: Actual Code vs Internal Behavior】\n")
+
+class Example:
+    def method(self, arg):
+        print(f"  self = {id(self)}")  # selfのIDを表示
+        print(f"  arg = {arg}")
+
+# オブジェクトを作成
+# Create object
+obj = Example()
+print(f"obj = {id(obj)}")  # objのIDを表示
+
+print("\n--- 普通の書き方 / Normal way ---")
+print("obj.method('hello')")
+obj.method("hello")
+
+print("\n--- 内部で実際に起きていること / What actually happens internally ---")
+print("Example.method(obj, 'hello')  ← Python が内部でやっていること")
+print("Example.method(obj, 'hello')  ← What Python does internally")
+Example.method(obj, "hello")
+
+print("\n✓ 発見 / Discovery:")
+print("  obj.method('hello') は実は...")
+print("  obj.method('hello') is actually...")
+print("  Example.method(obj, 'hello') と同じ！")
+print("  Same as Example.method(obj, 'hello')!")
+print("  obj が self として渡される")
+print("  obj is passed as self")
+
+# ============================================================================
+# セクション8: 複数のオブジェクトで self が違う / Section 8: Different self for Multiple Objects
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション8: 複数のオブジェクトで self が違う】")
+print("【Section 8: Different self for Multiple Objects】\n")
+
+class Counter:
+    def __init__(self, name):
+        # 各オブジェクト固有の名前とカウント
+        # Unique name and count for each object
+        self.name = name
+        self.count = 0
+        print(f"  Created counter: {self.name}")
+    
+    def increment(self):
+        # 自分のカウントを増やす
+        # Increment own count
+        self.count += 1
+        print(f"  {self.name}: count = {self.count}")
+    
+    def show(self):
+        # 自分のカウントを表示
+        # Show own count
+        print(f"  {self.name} has count: {self.count}")
+
+# 3つのカウンターを作成
+# Create 3 counters
+print("--- カウンター作成 / Create Counters ---")
+counter_a = Counter("Counter A")
+counter_b = Counter("Counter B")
+counter_c = Counter("Counter C")
+
+print("\n--- Counter A を増やす / Increment Counter A ---")
+counter_a.increment()  # Counter A の self.count が増える
+counter_a.increment()
+
+print("\n--- Counter B を増やす / Increment Counter B ---")
+counter_b.increment()  # Counter B の self.count が増える
+
+print("\n--- 全カウンターを表示 / Show All Counters ---")
+counter_a.show()  # Counter A の count
+counter_b.show()  # Counter B の count
+counter_c.show()  # Counter C の count (まだ0)
+
+print("\n✓ ポイント / Key Point:")
+print("  各オブジェクトは独自の self.count を持つ")
+print("  Each object has its own self.count")
+print("  self が違うので、データも別々")
+print("  Different self means separate data")
+
+# ============================================================================
+# セクション9: self の名前は変えられる？ / Section 9: Can we change self's name?
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション9: self の名前は変えられる？】")
+print("【Section 9: Can we change self's name?】\n")
+
+# selfの代わりに別の名前を使う（非推奨）
+# Use different name instead of self (not recommended)
+class WeirdClass:
+    def method(this, value):  # ← self の代わりに this
+        # thisでも動く（でも非推奨！）
+        # Works with this (but not recommended!)
+        print(f"  this = {this}")
+        print(f"  value = {value}")
+
+weird = WeirdClass()
+print("weird.method('test')")
+weird.method("test")
+
+print("\n⚠️ 注意 / Warning:")
+print("  技術的には self 以外の名前も使えるが...")
+print("  Technically can use names other than self, but...")
+print("  Python の慣習では必ず self を使うべき！")
+print("  Python convention is to always use self!")
+
+# ============================================================================
+# セクション10: 実践パターン / Section 10: Practical Patterns
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【セクション10: 実践パターン】")
+print("【Section 10: Practical Patterns】\n")
+
+class BankAccount:
+    def __init__(self, owner, balance):
+        # 初期設定
+        # Initial setup
+        self.owner = owner
+        self.balance = balance
+        print(f"  Account created: {self.owner}, Balance: ${self.balance}")
+    
+    def deposit(self, amount):
+        # 入金（自分の残高を増やす）
+        # Deposit (increase own balance)
+        self.balance += amount
+        print(f"  Deposited ${amount}")
+        self.show_balance()  # 自分の別メソッドを呼ぶ
+    
+    def withdraw(self, amount):
+        # 出金（自分の残高を減らす）
+        # Withdraw (decrease own balance)
+        if self.balance >= amount:
+            self.balance -= amount
+            print(f"  Withdrew ${amount}")
+            self.show_balance()  # 自分の別メソッドを呼ぶ
+        else:
+            print(f"  ❌ Insufficient balance!")
+    
+    def show_balance(self):
+        # 残高表示（自分のデータを表示）
+        # Show balance (display own data)
+        print(f"  {self.owner}'s balance: ${self.balance}")
+
+print("--- Tanaka の口座 / Tanaka's Account ---")
+account1 = BankAccount("Tanaka", 1000)
+
+print("\naccount1.deposit(500)  ← 500ドル入金")
+account1.deposit(500)
+
+print("\naccount1.withdraw(300)  ← 300ドル出金")
+account1.withdraw(300)
+
+print("\n--- Sato の口座 / Sato's Account ---")
+account2 = BankAccount("Sato", 2000)
+
+print("\naccount2.withdraw(500)  ← 500ドル出金")
+account2.withdraw(500)
+
+print("\n--- 両方の残高を確認 / Check Both Balances ---")
+account1.show_balance()  # Tanaka: $1200
+account2.show_balance()  # Sato: $1500
+
+# ============================================================================
+# まとめ / Summary
+# ============================================================================
+print("\n\n" + "=" * 80)
+print("【まとめ / Summary】")
+print("=" * 80)
+
+print("""
+┌────────────────────────────────────────────────────────┐
+│ self とは？ / What is self?                             │
+├────────────────────────────────────────────────────────┤
+│ ・メソッドを呼んだオブジェクト自身                       │
+│   The object that called the method                     │
+│ ・Python が自動的に渡してくれる                         │
+│   Python automatically passes it                        │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ なぜ self が必要？ / Why is self needed?                │
+├────────────────────────────────────────────────────────┤
+│ 1. 自分のデータにアクセスする: self.name               │
+│    Access own data: self.name                           │
+│ 2. 自分のメソッドを呼ぶ: self.method()                 │
+│    Call own methods: self.method()                      │
+│ 3. どのオブジェクトか識別する                           │
+│    Identify which object                                │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ 書き方のルール / Writing Rules                          │
+├────────────────────────────────────────────────────────┤
+│ 定義時 / When defining:                                 │
+│   def method(self, arg):  ← self を書く                │
+│                             Write self                  │
+│ 呼び出し時 / When calling:                              │
+│   obj.method(arg)  ← self は書かない                   │
+│                      Don't write self                   │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ 覚えるパターン / Pattern to Remember                    │
+├────────────────────────────────────────────────────────┤
+│ class MyClass:                                          │
+│     def __init__(self, value):                          │
+│         self.value = value  # データを保存              │
+│                                                         │
+│     def method(self):                                   │
+│         print(self.value)   # データを使う              │
+│         self.other_method() # 他メソッドを呼ぶ          │
+│                                                         │
+│     def other_method(self):                             │
+│         pass                                            │
+└────────────────────────────────────────────────────────┘
+
+重要な理解 / Key Understanding:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+obj.method(arg)
+    ↓ 内部で実際には / Internally becomes:
+MyClass.method(obj, arg)
+             ↑
+          これがself / This is self
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+""")
+
+print("\n実行完了！ / Execution complete!")
+print("self はもう怖くない！ / self is no longer scary!")
