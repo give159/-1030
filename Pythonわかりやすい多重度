@@ -1,0 +1,165 @@
+すごく良い質問です👏
+「多重度（1対1、1対多、多対多）」は、**データの関係（リレーション）**を表す考え方です。
+Pythonではクラスとリストを使ってシンプルに表現できます。
+
+以下で、**新人エンジニア向けに1行ずつコメント付き**で説明します👇
+
+---
+
+# 🧩 Pythonで学ぶ多重度（Multiplicity）
+
+---
+
+## ① 1対1（One-to-One）
+
+> 例：**人 と パスポート**
+> → 1人が1つのパスポートを持つ。
+
+```python
+# 1人を表すクラス
+class Person:
+    def __init__(self, name):
+        self.name = name         # 人の名前
+        self.passport = None     # パスポートをあとで紐づける（最初はNone）
+
+# パスポートを表すクラス
+class Passport:
+    def __init__(self, number):
+        self.number = number     # パスポート番号
+        self.owner = None        # 所有者（Person）をあとで紐づける
+
+# インスタンス作成
+person = Person("Yuki")          # 人を作る
+passport = Passport("JP123456")  # パスポートを作る
+
+# 1対1の関係を作る
+person.passport = passport       # 人にパスポートを紐づける
+passport.owner = person          # パスポートに持ち主を紐づける
+
+# 確認
+print(person.name, "→", person.passport.number)
+print(passport.number, "→", passport.owner.name)
+```
+
+🧠 **ポイント：**
+
+* 双方向でお互いを参照すると「1対1関係」になる
+* 現実世界の「1人に1つ」関係をそのまま再現
+
+---
+
+## ② 1対多（One-to-Many）
+
+> 例：**先生 と 生徒たち**
+> → 先生1人が、複数の生徒を担当する。
+
+```python
+# 生徒を表すクラス
+class Student:
+    def __init__(self, name):
+        self.name = name        # 生徒の名前
+
+# 先生を表すクラス
+class Teacher:
+    def __init__(self, name):
+        self.name = name        # 先生の名前
+        self.students = []      # 生徒のリスト（複数）
+
+    def add_student(self, student):
+        self.students.append(student)  # 生徒を追加する
+
+# インスタンス作成
+teacher = Teacher("Tanaka")
+student1 = Student("Aki")
+student2 = Student("Tomo")
+
+# 1対多の関係を作る
+teacher.add_student(student1)
+teacher.add_student(student2)
+
+# 確認
+print(f"{teacher.name}先生の生徒:")
+for s in teacher.students:
+    print(" -", s.name)
+```
+
+🧠 **ポイント：**
+
+* 「先生 → 生徒たち」は1対多
+* `リスト`を使って「複数の関係」を表現する
+
+---
+
+## ③ 多対多（Many-to-Many）
+
+> 例：**生徒 と クラス**
+> → 生徒は複数のクラスを受講でき、クラスにも複数の生徒がいる。
+
+```python
+# 生徒クラス
+class Student:
+    def __init__(self, name):
+        self.name = name
+        self.classes = []          # 生徒が受けるクラス（複数）
+
+    def join_class(self, class_):
+        self.classes.append(class_)   # クラスを追加
+        class_.students.append(self)  # クラスにも生徒を追加（双方向）
+
+# クラス（授業）クラス
+class Class:
+    def __init__(self, title):
+        self.title = title
+        self.students = []           # 受講している生徒たち
+
+# インスタンス作成
+math = Class("Math")
+english = Class("English")
+
+alice = Student("Alice")
+bob = Student("Bob")
+
+# 多対多の関係を作る
+alice.join_class(math)
+alice.join_class(english)
+bob.join_class(english)
+
+# 確認
+print("📘 各クラスの生徒:")
+for c in [math, english]:
+    print(f"{c.title}: {[s.name for s in c.students]}")
+
+print("\n👩‍🎓 各生徒のクラス:")
+for s in [alice, bob]:
+    print(f"{s.name}: {[c.title for c in s.classes]}")
+```
+
+🧠 **ポイント：**
+
+* 双方向に「お互いを登録」して関係を作る
+* データベースでは「中間テーブル」で表現される関係
+
+---
+
+# 🎯 まとめ
+
+| 関係  | 例         | 実装のポイント      |
+| --- | --------- | ------------ |
+| 1対1 | 人 ↔ パスポート | お互いが1つの属性で参照 |
+| 1対多 | 先生 → 生徒たち | `リスト`で複数を保持  |
+| 多対多 | 生徒 ↔ クラス  | 双方向でリストに追加   |
+
+---
+
+# 🧠 たとえイメージ
+
+| 関係タイプ | 図解                     |
+| ----- | ---------------------- |
+| 1対1   | 👤──📘（1人1冊）           |
+| 1対多   | 👩‍🏫──👧👦👦（先生と生徒たち） |
+| 多対多   | 👩‍🎓👦⇄📘📗📙（生徒と授業）  |
+
+---
+
+希望があれば、これを**「新人エンジニア向けノート記事（Markdown）」**形式に整えて出力します📄
+作りますか？
