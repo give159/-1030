@@ -1,0 +1,327 @@
+新人エンジニア向けに、Pythonのデザインパターンについて解説します！
+
+## デザインパターンとは
+
+デザインパターンは、ソフトウェア開発でよく遭遇する問題に対する「実証済みの解決策」です。先輩エンジニアたちが蓄積してきた知恵を、再利用可能な形でまとめたものと考えてください。
+
+## 新人エンジニアがまず押さえるべき5つのパターン
+
+### 1. **Singleton（シングルトン）**
+クラスのインスタンスを1つだけに制限するパターン
+
+```python
+class DatabaseConnection:
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.connection = "接続済み"
+        return cls._instance
+
+# 使用例
+db1 = DatabaseConnection()
+db2 = DatabaseConnection()
+print(db1 is db2)  # True - 同じインスタンス
+```
+
+**いつ使う？** データベース接続、ログ管理など、アプリ全体で1つだけ存在すべきもの
+
+### 2. **Factory（ファクトリー）**
+オブジェクトの生成をカプセル化するパターン
+
+```python
+class Animal:
+    def speak(self):
+        pass
+
+class Dog(Animal):
+    def speak(self):
+        return "ワン！"
+
+class Cat(Animal):
+    def speak(self):
+        return "ニャー！"
+
+class AnimalFactory:
+    @staticmethod
+    def create_animal(animal_type):
+        if animal_type == "dog":
+            return Dog()
+        elif animal_type == "cat":
+            return Cat()
+        raise ValueError("未知の動物タイプ")
+
+# 使用例
+animal = AnimalFactory.create_animal("dog")
+print(animal.speak())  # ワン！
+```
+
+**いつ使う？** 条件によって異なるクラスのインスタンスを作る必要があるとき
+
+### 3. **Observer（オブザーバー）**
+オブジェクトの状態変化を他のオブジェクトに通知するパターン
+
+```python
+class Subject:
+    def __init__(self):
+        self._observers = []
+        self._state = None
+    
+    def attach(self, observer):
+        self._observers.append(observer)
+    
+    def notify(self):
+        for observer in self._observers:
+            observer.update(self._state)
+    
+    def set_state(self, state):
+        self._state = state
+        self.notify()
+
+class Observer:
+    def __init__(self, name):
+        self.name = name
+    
+    def update(self, state):
+        print(f"{self.name}が通知を受信: {state}")
+
+# 使用例
+subject = Subject()
+observer1 = Observer("観察者1")
+observer2 = Observer("観察者2")
+
+subject.attach(observer1)
+subject.attach(observer2)
+subject.set_state("重要な変更が発生！")
+```
+
+**いつ使う？** イベント駆動システム、GUIアプリケーション、リアルタイム通知など
+
+### 4. **Strategy（ストラテジー）**
+アルゴリズムを切り替え可能にするパターン
+
+```python
+from abc import ABC, abstractmethod
+
+class PaymentStrategy(ABC):
+    @abstractmethod
+    def pay(self, amount):
+        pass
+
+class CreditCardPayment(PaymentStrategy):
+    def pay(self, amount):
+        return f"クレジットカードで{amount}円支払い"
+
+class PayPayPayment(PaymentStrategy):
+    def pay(self, amount):
+        return f"PayPayで{amount}円支払い"
+
+class ShoppingCart:
+    def __init__(self, payment_strategy):
+        self.payment_strategy = payment_strategy
+    
+    def checkout(self, amount):
+        return self.payment_strategy.pay(amount)
+
+# 使用例
+cart1 = ShoppingCart(CreditCardPayment())
+print(cart1.checkout(1000))
+
+cart2 = ShoppingCart(PayPayPayment())
+print(cart2.checkout(1000))
+```
+
+**いつ使う？** 同じ目的で複数の方法があり、実行時に切り替えたいとき
+
+### 5. **Decorator（デコレーター）**
+オブジェクトに動的に機能を追加するパターン
+
+```python
+def timing_decorator(func):
+    import time
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f"{func.__name__}の実行時間: {end - start:.4f}秒")
+        return result
+    return wrapper
+
+@timing_decorator
+def slow_function():
+    import time
+    time.sleep(1)
+    return "完了"
+
+# 使用例
+slow_function()  # 実行時間が表示される
+```
+
+**いつ使う？** 既存のコードを変更せずに機能を追加したいとき（ログ、認証、キャッシュなど）
+
+## 学習のコツ
+
+1. **実際に手を動かす** - コードを書いて試してみる
+2. **小さく始める** - 全部を一度に覚えようとしない
+3. **実務で使う** - 「このパターンが使えそう」と気づく習慣をつける
+4. **過度に使わない** - シンプルな解決策で十分な場合も多い
+
+デザインパターンは「銀の弾丸」ではありません。適切な場面で使うことが重要です。コードレビューや先輩のコードを読むことで、実践的な使い方が学べますよ！
+
+何か特定のパターンについて詳しく知りたい場合や、具体的なユースケースがあれば教えてください。
+
+Pythonのアクセス制御について説明しますね！
+
+## Pythonのアンダースコアルール
+
+実は**逆**です：
+
+- **アンダースコア1個 `_`** → **プロテクト（protected）**
+- **アンダースコア2個 `__`** → **プライベート（private）**
+- **アンダースコアなし** → **パブリック（public）**
+
+## 具体例で見てみましょう
+
+```python
+class BankAccount:
+    def __init__(self):
+        self.account_number = "123456"      # パブリック：どこからでもアクセス可
+        self._balance = 100000              # プロテクト：サブクラスでも使える（慣例）
+        self.__pin = "1234"                 # プライベート：このクラス内だけ
+    
+    def get_balance(self):
+        return self._balance
+    
+    def _internal_method(self):
+        """プロテクトメソッド：継承先でも使える"""
+        return "内部処理"
+    
+    def __validate_pin(self, pin):
+        """プライベートメソッド：このクラス内だけ"""
+        return pin == self.__pin
+
+# 使用例
+account = BankAccount()
+
+# パブリック：普通にアクセスできる
+print(account.account_number)  # OK: 123456
+
+# プロテクト：アクセスできるが「非推奨」の意味
+print(account._balance)  # OK（動くが推奨されない）: 100000
+
+# プライベート：直接アクセスできない
+print(account.__pin)  # エラー！AttributeError
+```
+
+## それぞれの意味と使い分け
+
+### 1. **アンダースコア1個 `_`（プロテクト）**
+```python
+class Parent:
+    def __init__(self):
+        self._protected_value = 10
+    
+    def _protected_method(self):
+        return "継承先でも使えます"
+
+class Child(Parent):
+    def use_protected(self):
+        return self._protected_value * 2  # OK: 使える
+
+# 外部からも技術的には使える（でも「使わないで」という意味）
+obj = Parent()
+print(obj._protected_value)  # 動くけど推奨されない
+```
+
+**いつ使う？**
+- 継承先のクラスで使ってほしいメソッド/変数
+- 外部からは「内部実装なので触らないで」という意思表示
+
+### 2. **アンダースコア2個 `__`（プライベート）**
+```python
+class SecureClass:
+    def __init__(self):
+        self.__secret = "極秘情報"
+    
+    def __private_method(self):
+        return "完全にプライベート"
+    
+    def public_method(self):
+        # クラス内からは使える
+        return self.__private_method()
+
+obj = SecureClass()
+print(obj.public_method())  # OK: 動く
+
+# 直接アクセスは不可
+print(obj.__secret)  # エラー！
+print(obj.__private_method())  # エラー！
+
+# 実は裏技でアクセスできる（でもやっちゃダメ）
+print(obj._SecureClass__secret)  # 動くが絶対やらない
+```
+
+**いつ使う？**
+- 本当に外部から触られたくない内部実装
+- 名前の衝突を避けたいとき
+
+## 実践的な使い分け例
+
+```python
+class User:
+    def __init__(self, name, email, password):
+        self.name = name                    # パブリック：誰でも見れる
+        self._email = email                 # プロテクト：慣例的に内部用
+        self.__password_hash = self.__hash_password(password)  # プライベート：絶対隠す
+    
+    def __hash_password(self, password):
+        """完全プライベート：パスワードのハッシュ化"""
+        return f"hashed_{password}"
+    
+    def _validate_email(self, email):
+        """プロテクト：継承先でカスタマイズ可能"""
+        return "@" in email
+    
+    def change_password(self, old_password, new_password):
+        """パブリック：外部から使えるメソッド"""
+        if self.__hash_password(old_password) == self.__password_hash:
+            self.__password_hash = self.__hash_password(new_password)
+            return True
+        return False
+
+# 継承の例
+class PremiumUser(User):
+    def custom_validation(self):
+        # プロテクトは使える
+        return self._validate_email(self._email)
+    
+    def try_access_password(self):
+        # プライベートは使えない
+        # return self.__password_hash  # エラー！
+        pass
+```
+
+## 重要なポイント
+
+1. **Pythonには「完全な」アクセス制御はない**
+   - あくまで「慣例」と「名前マングリング」
+   - 他の言語（Java、C++）のようなコンパイラレベルの制限ではない
+
+2. **アンダースコア1個が最もよく使われる**
+   - 「内部実装だよ」という優しい警告
+   - 継承でも使いやすい
+
+3. **アンダースコア2個は慎重に使う**
+   - 本当に必要なときだけ
+   - 名前の衝突を避ける目的が主
+
+## 覚え方
+
+**「プロ（1）とプラ（2）、数が増えるほど厳しい」**
+- プロテクト = アンダースコア**1個**
+- プライベート = アンダースコア**2個**
+
+実務では`_`（プロテクト）を使うことが圧倒的に多いです。`__`（プライベート）は特別な理由がない限りあまり使いません。
+
+何か具体的な使い方で迷っていることがあれば、教えてください！
