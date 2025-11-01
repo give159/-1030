@@ -1,0 +1,1122 @@
+エンジニア向けのテック系手順書を作ります！
+
+## 【開発環境構築手順書】
+
+### 文書情報
+```
+対象: 新規プロジェクト参加者
+OS: macOS / Windows / Linux
+所要時間: 約2時間
+```
+
+---
+
+## 1. 開発環境セットアップ手順
+
+### 1.1 必須ツールのインストール
+
+#### Git のインストール
+
+**macOS:**
+```bash
+# Homebrewのインストール（未インストールの場合）
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Gitのインストール
+brew install git
+
+# バージョン確認
+git --version
+# 期待される出力: git version 2.39.0 以上
+```
+
+**Windows:**
+```
+1. https://git-scm.com/ にアクセス
+2. 「Download for Windows」をクリック
+3. インストーラーを実行
+4. すべてデフォルト設定でOK
+5. Git Bash を起動して確認:
+   git --version
+```
+
+**初期設定:**
+```bash
+# ユーザー名設定
+git config --global user.name "山田太郎"
+
+# メールアドレス設定
+git config --global user.email "taro.yamada@example.com"
+
+# デフォルトブランチ名を main に
+git config --global init.defaultBranch main
+
+# 設定確認
+git config --list
+```
+
+#### Node.js のインストール
+
+**macOS / Linux:**
+```bash
+# nvmのインストール
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# ターミナルを再起動
+
+# Node.jsのインストール（LTS版）
+nvm install --lts
+
+# バージョン確認
+node -v
+# 期待される出力: v20.x.x
+
+npm -v
+# 期待される出力: 10.x.x
+```
+
+**Windows:**
+```
+1. https://nodejs.org/ にアクセス
+2. LTS版をダウンロード
+3. インストーラーを実行
+4. コマンドプロンプトで確認:
+   node -v
+   npm -v
+```
+
+#### Docker のインストール
+
+**macOS:**
+```bash
+# Docker Desktop をインストール
+brew install --cask docker
+
+# Dockerアプリを起動
+
+# 確認
+docker --version
+# 期待される出力: Docker version 24.0.0 以上
+
+docker-compose --version
+```
+
+**Windows:**
+```
+1. Docker Desktop for Windows をダウンロード
+2. WSL 2 が有効になっていることを確認
+3. インストーラーを実行
+4. 確認:
+   docker --version
+```
+
+#### VS Code のインストールと設定
+
+**インストール:**
+```bash
+# macOS
+brew install --cask visual-studio-code
+
+# または公式サイトからダウンロード
+# https://code.visualstudio.com/
+```
+
+**必須拡張機能:**
+```
+インストール方法:
+1. VS Code を開く
+2. 左サイドバーの拡張機能アイコンをクリック
+3. 以下を検索してインストール
+
+必須:
+□ ESLint - コード品質チェック
+□ Prettier - コードフォーマッター
+□ GitLens - Git拡張
+□ Docker - Docker管理
+
+推奨:
+□ Japanese Language Pack - 日本語化
+□ Python - Python開発
+□ REST Client - API テスト
+□ TODO Highlight - TODOハイライト
+```
+
+**settings.json 設定:**
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "editor.tabSize": 2,
+  "terminal.integrated.fontSize": 14
+}
+```
+
+### 1.2 プロジェクトのクローン
+
+```bash
+# 作業ディレクトリに移動
+cd ~/projects
+
+# リポジトリをクローン
+git clone https://github.com/company/project-name.git
+
+# プロジェクトディレクトリに移動
+cd project-name
+
+# ブランチ確認
+git branch -a
+
+# 期待される出力:
+# * main
+#   remotes/origin/HEAD -> origin/main
+#   remotes/origin/develop
+```
+
+### 1.3 依存関係のインストール
+
+```bash
+# パッケージのインストール
+npm install
+# または
+yarn install
+
+# 所要時間: 約5分
+
+# 確認
+npm list --depth=0
+
+# エラーが出た場合:
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### 1.4 環境変数の設定
+
+```bash
+# .env.example をコピー
+cp .env.example .env
+
+# .env ファイルを編集
+code .env
+```
+
+**.env の例:**
+```env
+# データベース
+DATABASE_URL=postgresql://localhost:5432/myapp_dev
+DATABASE_USERNAME=postgres
+DATABASE_PASSWORD=password
+
+# API キー（開発環境用）
+API_KEY=dev_xxxxxxxxxxxxxxxx
+API_SECRET=dev_yyyyyyyyyyyyyyyy
+
+# その他
+NODE_ENV=development
+PORT=3000
+LOG_LEVEL=debug
+```
+
+**設定値の取得先:**
+```
+1. Notion のプロジェクトページ
+2. Slack の #dev-team ピン留めメッセージ
+3. メンターに直接確認
+
+⚠️ 本番環境の値は絶対に使わない！
+```
+
+### 1.5 データベースのセットアップ
+
+```bash
+# Dockerでデータベース起動
+docker-compose up -d db
+
+# 起動確認
+docker-compose ps
+
+# 期待される出力:
+# Name    State    Ports
+# db      Up       5432:5432
+
+# マイグレーション実行
+npm run migrate
+
+# シードデータ投入
+npm run seed
+
+# 確認
+npm run db:check
+```
+
+### 1.6 開発サーバーの起動
+
+```bash
+# 開発サーバー起動
+npm run dev
+
+# 期待される出力:
+# ✓ Ready on http://localhost:3000
+# ✓ Compiled successfully
+
+# ブラウザで確認
+open http://localhost:3000
+```
+
+**✅ 完了確認:**
+```
+□ ログイン画面が表示される
+□ コンソールにエラーがない
+□ データベース接続成功
+```
+
+---
+
+## 2. Git 操作手順書
+
+### 2.1 ブランチ作成手順
+
+**命名規則:**
+```
+feature/  - 新機能開発
+fix/      - バグ修正
+hotfix/   - 緊急修正
+refactor/ - リファクタリング
+docs/     - ドキュメント更新
+
+例:
+feature/user-login
+fix/header-layout
+hotfix/payment-error
+```
+
+**手順:**
+```bash
+# 1. 最新のmainを取得
+git checkout main
+git pull origin main
+
+# 2. ブランチ作成
+git checkout -b feature/user-profile
+
+# 3. ブランチ確認
+git branch
+# * feature/user-profile
+#   main
+
+# 4. リモートにプッシュ
+git push -u origin feature/user-profile
+```
+
+### 2.2 コミット手順
+
+**コミットメッセージの規則:**
+```
+<type>: <subject>
+
+type:
+- feat:     新機能
+- fix:      バグ修正
+- docs:     ドキュメント
+- style:    スタイル修正
+- refactor: リファクタリング
+- test:     テスト追加
+- chore:    雑務
+
+例:
+feat: ユーザープロフィール画面を追加
+fix: ヘッダーのレイアウト崩れを修正
+docs: READMEにセットアップ手順を追記
+```
+
+**手順:**
+```bash
+# 1. 変更ファイルを確認
+git status
+
+# 2. ファイルをステージング
+git add src/components/UserProfile.jsx
+# または全て
+git add .
+
+# 3. 差分確認
+git diff --staged
+
+# 4. コミット
+git commit -m "feat: ユーザープロフィール画面を追加"
+
+# 5. プッシュ
+git push origin feature/user-profile
+```
+
+### 2.3 プルリクエスト（PR）作成手順
+
+**手順:**
+
+1. **GitHub でPRを作成**
+   ```
+   1. GitHub リポジトリページを開く
+   2. 「Pull requests」タブをクリック
+   3. 「New pull request」をクリック
+   4. base: main ← compare: feature/user-profile
+   5. 「Create pull request」をクリック
+   ```
+
+2. **PR の説明を記入**
+   ```markdown
+   ## 概要
+   ユーザープロフィール画面を実装しました。
+   
+   ## 変更内容
+   - ユーザー情報表示コンポーネントを追加
+   - プロフィール編集機能を実装
+   - API エンドポイントを追加
+   
+   ## 動作確認
+   - [ ] ログイン後、プロフィールページにアクセスできる
+   - [ ] プロフィール編集ができる
+   - [ ] 変更内容が保存される
+   
+   ## スクリーンショット
+   （画像を添付）
+   
+   ## 関連Issue
+   Closes #123
+   
+   ## レビュー依頼
+   @mentor-name @team-member
+   ```
+
+3. **ラベルを付ける**
+   ```
+   - enhancement（新機能）
+   - bug（バグ修正）
+   - documentation（ドキュメント）
+   ```
+
+4. **レビュアーを指定**
+   ```
+   右サイドバー:
+   - Reviewers: メンターを選択
+   - Assignees: 自分を選択
+   ```
+
+### 2.4 コンフリクト解決手順
+
+**コンフリクトが発生した場合:**
+
+```bash
+# 1. 最新のmainを取得
+git checkout main
+git pull origin main
+
+# 2. 作業ブランチに戻る
+git checkout feature/user-profile
+
+# 3. mainをマージ
+git merge main
+
+# コンフリクト発生
+# Auto-merging src/components/Header.jsx
+# CONFLICT (content): Merge conflict in src/components/Header.jsx
+
+# 4. コンフリクトファイルを確認
+git status
+# Unmerged paths:
+#   both modified:   src/components/Header.jsx
+
+# 5. ファイルを開いて修正
+code src/components/Header.jsx
+```
+
+**コンフリクトの見方:**
+```javascript
+<<<<<<< HEAD (現在のブランチ)
+const title = "マイページ";
+=======
+const title = "ユーザーページ";
+>>>>>>> main (マージ元)
+```
+
+**解決方法:**
+```javascript
+// どちらかを選ぶ、または両方を統合
+const title = "ユーザーページ"; // mainの変更を採用
+
+// または
+const title = "マイページ - ユーザープロフィール"; // 両方を統合
+```
+
+**解決後:**
+```bash
+# 6. 解決したファイルをステージング
+git add src/components/Header.jsx
+
+# 7. マージコミット
+git commit -m "merge: mainをマージしてコンフリクトを解決"
+
+# 8. プッシュ
+git push origin feature/user-profile
+```
+
+### 2.5 よく使うGitコマンド
+
+```bash
+# 状態確認
+git status
+
+# 変更差分を見る
+git diff
+git diff --staged
+
+# コミット履歴
+git log
+git log --oneline
+git log --graph --oneline
+
+# ブランチ一覧
+git branch -a
+
+# ブランチ削除
+git branch -d feature/old-branch
+git push origin --delete feature/old-branch
+
+# 変更を一時保存
+git stash
+git stash list
+git stash pop
+
+# 最後のコミットを修正
+git commit --amend
+
+# コミットを取り消す
+git reset HEAD~1      # 変更は残る
+git reset --hard HEAD~1  # 変更も削除（危険）
+
+# リモートの変更を強制取得
+git fetch origin
+git reset --hard origin/main
+```
+
+---
+
+## 3. デプロイ手順書
+
+### 3.1 ステージング環境へのデプロイ
+
+**前提条件:**
+```
+□ PRがマージされている
+□ CIが成功している
+□ レビューが完了している
+```
+
+**手順:**
+
+```bash
+# 1. デプロイブランチに切り替え
+git checkout develop
+git pull origin develop
+
+# 2. デプロイスクリプト実行
+npm run deploy:staging
+
+# 3. デプロイログ確認
+# 出力例:
+# ✓ Building...
+# ✓ Tests passed
+# ✓ Deploying to staging...
+# ✓ Deployment successful!
+# 
+# Staging URL: https://staging.example.com
+```
+
+**動作確認:**
+```
+□ ステージングURLにアクセス
+  https://staging.example.com
+
+□ 動作確認項目
+  □ ログインできる
+  □ 新機能が動作する
+  □ 既存機能が壊れていない
+  □ エラーが出ていない
+
+□ ログ確認
+  - CloudWatch Logs で確認
+  - エラーがないことを確認
+```
+
+**問題があった場合:**
+```bash
+# ロールバック
+npm run rollback:staging
+
+# または前のバージョンを指定
+npm run deploy:staging -- --version=v1.2.3
+```
+
+### 3.2 本番環境へのデプロイ
+
+**⚠️ 重要: 本番デプロイは慎重に！**
+
+**事前チェックリスト:**
+```
+□ ステージング環境で動作確認済み
+□ テストが全て通っている
+□ レビューが完了している
+□ 関係者に通知済み
+□ デプロイ時間が承認されている
+□ ロールバック手順を確認済み
+□ 監視画面を開いている
+```
+
+**手順:**
+
+```bash
+# 1. mainブランチに切り替え
+git checkout main
+git pull origin main
+
+# 2. タグを作成
+git tag -a v1.3.0 -m "Release v1.3.0"
+git push origin v1.3.0
+
+# 3. デプロイ開始（承認が必要）
+npm run deploy:production
+
+# 確認メッセージが表示される
+# Deploy to PRODUCTION? (yes/no)
+yes
+
+# 4. デプロイ進行中...
+# ✓ Building production bundle...
+# ✓ Running tests...
+# ✓ Creating backup...
+# ✓ Deploying to production...
+# ⏳ Waiting for health check...
+# ✓ Deployment successful!
+```
+
+**デプロイ後の確認（5分以内）:**
+```bash
+# ヘルスチェック
+curl https://api.example.com/health
+
+# 期待される出力:
+# {"status": "ok", "version": "1.3.0"}
+
+# 監視ダッシュボード確認
+# - Datadog: エラー率
+# - Sentry: エラーログ
+# - CloudWatch: メトリクス
+```
+
+**Slack通知テンプレート:**
+```
+#deployments チャンネル:
+
+🚀 本番デプロイ完了
+
+バージョン: v1.3.0
+デプロイ者: @山田
+時刻: 2025-10-31 14:30
+
+変更内容:
+- ユーザープロフィール機能追加
+- パフォーマンス改善
+
+URL: https://example.com
+```
+
+**ロールバック手順:**
+```bash
+# 問題が発生した場合
+
+# 1. すぐにロールバック実行
+npm run rollback:production
+
+# 2. 前のバージョンに戻す
+npm run deploy:production -- --version=v1.2.9
+
+# 3. Slackで報告
+#incidents チャンネル:
+「🚨 本番環境でエラー発生のためロールバックしました」
+```
+
+---
+
+## 4. Docker 操作手順書
+
+### 4.1 コンテナの起動・停止
+
+```bash
+# すべてのコンテナを起動
+docker-compose up -d
+
+# 特定のサービスのみ起動
+docker-compose up -d db redis
+
+# ログを見ながら起動
+docker-compose up
+
+# コンテナ一覧
+docker-compose ps
+
+# 期待される出力:
+# Name         State   Ports
+# app          Up      3000:3000
+# db           Up      5432:5432
+# redis        Up      6379:6379
+
+# コンテナを停止
+docker-compose stop
+
+# コンテナを削除
+docker-compose down
+
+# ボリュームも削除
+docker-compose down -v
+```
+
+### 4.2 ログの確認
+
+```bash
+# 全サービスのログ
+docker-compose logs
+
+# 特定サービスのログ
+docker-compose logs app
+
+# リアルタイムでログ表示
+docker-compose logs -f app
+
+# 最新100行のみ
+docker-compose logs --tail=100 app
+```
+
+### 4.3 コンテナ内でコマンド実行
+
+```bash
+# コンテナ内でシェル起動
+docker-compose exec app bash
+
+# コンテナ内でコマンド実行
+docker-compose exec app npm test
+
+# データベースに接続
+docker-compose exec db psql -U postgres -d myapp_dev
+
+# Redisに接続
+docker-compose exec redis redis-cli
+```
+
+### 4.4 トラブルシューティング
+
+**コンテナが起動しない:**
+```bash
+# ログを確認
+docker-compose logs app
+
+# コンテナを再ビルド
+docker-compose build --no-cache app
+docker-compose up -d app
+
+# 全て削除して再構築
+docker-compose down -v
+docker-compose up -d --build
+```
+
+**ポートが使用中:**
+```bash
+# ポートを使用しているプロセスを確認
+lsof -i :3000
+
+# プロセスを終了
+kill -9 <PID>
+
+# または docker-compose.yml でポートを変更
+ports:
+  - "3001:3000"  # 3001に変更
+```
+
+**ディスク容量が足りない:**
+```bash
+# 不要なイメージを削除
+docker image prune -a
+
+# 不要なボリュームを削除
+docker volume prune
+
+# すべてクリーンアップ
+docker system prune -a --volumes
+```
+
+---
+
+## 5. データベース操作手順書
+
+### 5.1 マイグレーション
+
+```bash
+# マイグレーションファイル作成
+npm run migrate:create add_users_table
+
+# マイグレーション実行
+npm run migrate
+
+# ロールバック（1つ戻す）
+npm run migrate:rollback
+
+# すべてロールバック
+npm run migrate:rollback:all
+
+# 状態確認
+npm run migrate:status
+```
+
+**マイグレーションファイルの例:**
+```javascript
+// migrations/20251031_add_users_table.js
+
+exports.up = async function(knex) {
+  await knex.schema.createTable('users', table => {
+    table.increments('id').primary();
+    table.string('name', 100).notNullable();
+    table.string('email', 255).notNullable().unique();
+    table.string('password_hash', 60).notNullable();
+    table.integer('age');
+    table.timestamps(true, true);  // created_at, updated_at
+  });
+};
+
+exports.down = async function(knex) {
+  await knex.schema.dropTable('users');
+};
+```
+
+### 5.2 データベースのバックアップ
+
+```bash
+# PostgreSQL のバックアップ
+docker-compose exec db pg_dump -U postgres myapp_dev > backup_$(date +%Y%m%d).sql
+
+# リストア
+docker-compose exec -T db psql -U postgres myapp_dev < backup_20251031.sql
+
+# MySQL のバックアップ
+docker-compose exec db mysqldump -u root -p myapp_dev > backup_$(date +%Y%m%d).sql
+```
+
+### 5.3 よく使うSQLクエリ
+
+```sql
+-- ユーザー一覧
+SELECT id, name, email, created_at 
+FROM users 
+ORDER BY created_at DESC 
+LIMIT 10;
+
+-- ユーザー数
+SELECT COUNT(*) FROM users;
+
+-- 今日登録したユーザー
+SELECT * FROM users 
+WHERE created_at >= CURRENT_DATE;
+
+-- メールアドレスで検索
+SELECT * FROM users 
+WHERE email LIKE '%@example.com';
+
+-- テーブル情報
+\d users  -- PostgreSQL
+DESCRIBE users;  -- MySQL
+```
+
+---
+
+## 6. テスト実行手順書
+
+### 6.1 ユニットテスト
+
+```bash
+# すべてのテスト実行
+npm test
+
+# 特定のファイルのみ
+npm test src/utils/validation.test.js
+
+# ウォッチモード（変更を検知して自動実行）
+npm test -- --watch
+
+# カバレッジ表示
+npm test -- --coverage
+
+# 期待される出力:
+# PASS  src/utils/validation.test.js
+#   ✓ 正しいメールアドレスを検証できる (2 ms)
+#   ✓ 不正なメールアドレスを検出できる (1 ms)
+# 
+# Test Suites: 1 passed, 1 total
+# Tests:       2 passed, 2 total
+# Coverage:    85%
+```
+
+### 6.2 E2Eテスト
+
+```bash
+# Cypressを起動
+npm run test:e2e
+
+# ヘッドレスモードで実行
+npm run test:e2e:headless
+
+# 特定のテストのみ
+npm run test:e2e -- --spec "cypress/e2e/login.cy.js"
+```
+
+### 6.3 API テスト
+
+```bash
+# REST Client (VS Code拡張機能) を使用
+
+# test.http ファイルを作成
+```
+
+**test.http の例:**
+```http
+### ヘルスチェック
+GET http://localhost:3000/api/health
+
+### ユーザー一覧取得
+GET http://localhost:3000/api/users
+Authorization: Bearer {{token}}
+
+### ユーザー作成
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "テストユーザー",
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### ユーザー更新
+PUT http://localhost:3000/api/users/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "更新後の名前"
+}
+```
+
+---
+
+## 7. トラブルシューティング手順書
+
+### 7.1 よくあるエラーと解決法
+
+#### エラー: "EADDRINUSE: address already in use"
+
+**原因:** ポートが既に使用中
+
+**解決法:**
+```bash
+# ポートを使用しているプロセスを確認
+# macOS/Linux
+lsof -i :3000
+
+# Windows
+netstat -ano | findstr :3000
+
+# プロセスを終了
+kill -9 <PID>
+
+# または別のポートを使う
+PORT=3001 npm run dev
+```
+
+#### エラー: "Module not found"
+
+**原因:** パッケージが未インストール
+
+**解決法:**
+```bash
+# node_modules を削除して再インストール
+rm -rf node_modules package-lock.json
+npm install
+
+# または特定のパッケージをインストール
+npm install <package-name>
+```
+
+#### エラー: "Permission denied"
+
+**原因:** 権限不足
+
+**解決法:**
+```bash
+# ファイルの所有者を確認
+ls -la
+
+# 所有者を変更
+sudo chown -R $(whoami) .
+
+# 実行権限を付与
+chmod +x script.sh
+```
+
+#### エラー: Database connection failed
+
+**原因:** DBが起動していない or 接続情報が間違っている
+
+**解決法:**
+```bash
+# Dockerコンテナ確認
+docker-compose ps
+
+# DBコンテナが停止している場合
+docker-compose up -d db
+
+# 接続確認
+docker-compose exec db psql -U postgres -d myapp_dev
+
+# .env ファイルの接続情報を確認
+cat .env | grep DATABASE
+```
+
+### 7.2 パフォーマンス問題の調査
+
+```bash
+# Node.js のメモリ使用量確認
+node --inspect index.js
+
+# Chrome DevTools でプロファイリング
+# chrome://inspect を開く
+
+# CPU プロファイル
+node --prof index.js
+node --prof-process isolate-*.log
+
+# メモリリーク検出
+node --inspect --max-old-space-size=4096 index.js
+```
+
+---
+
+## 8. コードレビューチェックリスト
+
+### レビュー依頼者
+
+```
+□ 動作確認済み
+□ テストを追加した
+□ テストが通る
+□ Lintエラーがない
+□ コミットメッセージが適切
+□ 不要なコメント・console.log を削除
+□ PRの説明が明確
+□ スクリーンショットを添付（UI変更の場合）
+```
+
+### レビュアー
+
+```
+□ コードが読みやすい
+□ 命名が適切
+□ ロジックが正しい
+□ エラーハンドリングがある
+□ セキュリティ問題がない
+□ パフォーマンス問題がない
+□ テストが十分
+□ ドキュメントが更新されている
+```
+
+---
+
+## 9. 緊急時対応手順
+
+### 本番環境でエラー発生
+
+**初動（5分以内）:**
+
+```
+1. Slackで報告
+   #incidents チャンネル:
+   「🚨 本番環境でエラー発生
+   現象: ユーザーがログインできない
+   発生時刻: 14:30
+   調査中です」
+
+2. エラーログを確認
+   - Sentry
+   - CloudWatch Logs
+   - Datadog
+
+3. 影響範囲を特定
+   - 全ユーザー？一部ユーザー？
+   - 機能は？
+
+4. 暫定対処
+   - ロールバック検討
+   - 該当機能を無効化
+```
+
+**対応（30分以内）:**
+
+```
+1. 原因特定
+   - ログ解析
+   - コード確認
+   - DB確認
+
+2. 修正方針決定
+   - 緊急パッチ
+   - ロールバック
+   - データ修正
+
+3. 修正実施
+
+4. 動作確認
+
+5. 完了報告
+```
+
+---
+
+## まとめ
+
+```
+よく使うコマンドまとめ:
+
+# 開発開始
+git pull origin main
+npm install
+npm run dev
+
+# コミット
+git add .
+git commit -m "feat: 機能追加"
+git push
+
+# テスト
+npm test
+npm run lint
+
+# デプロイ
+npm run deploy:staging
+
+困ったら:
+1. エラーメッセージをコピー
+2. ログを確認
+3. メンターに相談
+```
+
+この手順書をブックマークして、いつでも参照できるようにしてください！
