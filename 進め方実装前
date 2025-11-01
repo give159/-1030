@@ -1,0 +1,764 @@
+実装前の具体的な記載方法を示します！
+
+## 1. 設計メモの書き方
+
+### テンプレート
+
+```python
+"""
+【機能名】
+ユーザー登録機能
+
+【目的】
+新規ユーザーをシステムに登録する
+
+【入力】
+- name: str (必須) - ユーザー名（2-50文字）
+- email: str (必須) - メールアドレス
+- password: str (必須) - パスワード（8文字以上）
+- age: int (任意) - 年齢（0-150）
+
+【出力】
+成功時: User オブジェクト
+{
+    'id': 123,
+    'name': '太郎',
+    'email': 'taro@example.com',
+    'created_at': '2025-10-31T10:00:00'
+}
+
+失敗時: 例外を発生
+- ValueError: バリデーションエラー
+- DuplicateError: メールアドレス重複
+
+【処理フロー】
+1. 入力値のバリデーション
+   - 名前: 2-50文字、空白のみNG
+   - メール: 正規表現でチェック
+   - パスワード: 8文字以上、英数字含む
+   
+2. 重複チェック
+   - メールアドレスでDB検索
+   - 存在する場合はエラー
+   
+3. パスワードのハッシュ化
+   - bcryptを使用
+   
+4. DBに保存
+   - users テーブルに INSERT
+   
+5. 確認メール送信
+   - 非同期で送信（エラーでも処理は成功）
+
+【エッジケース】
+- 空文字列が来た場合 → ValueError
+- メールが不正な形式 → ValueError
+- パスワードが短い → ValueError
+- メール重複 → DuplicateError
+- DB接続エラー → DBError
+- 特殊文字が含まれる → エスケープ処理
+
+【依存関係】
+- bcrypt ライブラリ
+- email_validator ライブラリ
+- DB接続（PostgreSQL）
+- メール送信サービス（SendGrid）
+
+【想定所要時間】
+実装: 2時間
+テスト: 1時間
+
+【参考】
+- 類似機能: login.py
+- API仕様書: /docs/api.md
+"""
+```
+
+## 2. 関数の設計書
+
+### 詳細版
+
+```python
+def register_user(name: str, email: str, password: str, age: int = None) -> dict:
+    """
+    ユーザーを登録する
+    
+    Args:
+        name (str): ユーザー名
+            - 制約: 2-50文字
+            - 例: "山田太郎"
+            
+        email (str): メールアドレス
+            - 制約: RFC 5322準拠
+            - 例: "taro@example.com"
+            
+        password (str): パスワード
+            - 制約: 8文字以上、英数字を含む
+            - 例: "Pass1234"
+            
+        age (int, optional): 年齢
+            - 制約: 0-150
+            - 例: 25
+            - デフォルト: None
+    
+    Returns:
+        dict: ユーザー情報
+            {
+                'id': int,          # ユーザーID
+                'name': str,        # ユーザー名
+                'email': str,       # メールアドレス
+                'created_at': str   # 作成日時（ISO 8601形式）
+            }
+    
+    Raises:
+        ValueError: 入力値が不正な場合
+            - 名前が2文字未満または50文字超
+            - メール形式が不正
+            - パスワードが8文字未満
+            - 年齢が0未満または150超
+            
+        DuplicateError: メールアドレスが既に登録済み
+        
+        DBError: データベースエラー
+    
+    Examples:
+        >>> user = register_user("太郎", "taro@example.com", "Pass1234", 25)
+        >>> print(user['name'])
+        太郎
+        
+        >>> register_user("", "invalid", "short", -1)
+        Traceback (most recent call last):
+        ValueError: 名前は2文字以上必要です
+    
+    処理の流れ:
+        1. バリデーション（5ms）
+        2. 重複チェック（10ms）
+        3. ハッシュ化（50ms）
+        4. DB保存（20ms）
+        5. メール送信（非同期）
+        
+    Notes:
+        - パスワードは平文で保存しない
+        - メール送信失敗は処理成功扱い
+        - トランザクション処理あり
+    
+    See Also:
+        - login_user(): ログイン処理
+        - update_user(): ユーザー情報更新
+    
+    Author: 山田太郎
+    Date: 2025-10-31
+    Version: 1.0.0
+    """
+    pass
+```
+
+## 3. フローチャート（テキスト版）
+
+```python
+"""
+【処理フロー】
+
+START
+  ↓
+┌─────────────────┐
+│ 入力を受け取る    │
+│ (name, email,    │
+│  password, age)  │
+└────────┬─────────┘
+         ↓
+┌─────────────────┐
+│ バリデーション    │
+│ - 名前チェック    │
+│ - メールチェック  │
+│ - パスワード     │
+│ - 年齢チェック    │
+└────────┬─────────┘
+         ↓
+      NG ├─→ ValueError
+         │
+      OK ↓
+┌─────────────────┐
+│ 重複チェック      │
+│ SELECT email     │
+│ FROM users       │
+└────────┬─────────┘
+         ↓
+    存在する├─→ DuplicateError
+         │
+    存在しない↓
+┌─────────────────┐
+│ パスワード       │
+│ ハッシュ化       │
+│ (bcrypt)        │
+└────────┬─────────┘
+         ↓
+┌─────────────────┐
+│ DBに保存         │
+│ INSERT INTO     │
+│ users           │
+└────────┬─────────┘
+         ↓
+      成功├─→ ユーザー情報を返す
+         │
+      失敗├─→ DBError
+         ↓
+       END
+"""
+```
+
+## 4. テストケース一覧
+
+```python
+"""
+【テストケース】
+
+1. 正常系
+-------------------
+TC001: 正常な入力
+入力:
+  name="太郎", email="taro@example.com", 
+  password="Pass1234", age=25
+期待結果:
+  成功、ユーザーオブジェクトを返す
+  
+TC002: 年齢なし
+入力:
+  name="花子", email="hanako@example.com",
+  password="Pass5678"
+期待結果:
+  成功、age=None
+
+
+2. 異常系（バリデーション）
+-------------------
+TC101: 名前が短い
+入力: name="a"
+期待結果: ValueError("名前は2文字以上")
+
+TC102: 名前が長い
+入力: name="a" * 51
+期待結果: ValueError("名前は50文字以内")
+
+TC103: 名前が空
+入力: name=""
+期待結果: ValueError("名前は必須")
+
+TC104: メール形式不正
+入力: email="invalid"
+期待結果: ValueError("メール形式が不正")
+
+TC105: パスワードが短い
+入力: password="Pass1"
+期待結果: ValueError("パスワードは8文字以上")
+
+TC106: 年齢が負
+入力: age=-1
+期待結果: ValueError("年齢は0以上")
+
+TC107: 年齢が大きい
+入力: age=200
+期待結果: ValueError("年齢は150以下")
+
+
+3. 異常系（ビジネスロジック）
+-------------------
+TC201: メール重複
+入力: email="existing@example.com"（既存）
+期待結果: DuplicateError("メールアドレスが既に登録済み")
+
+
+4. 境界値
+-------------------
+TC301: 名前2文字（最小）
+入力: name="ab"
+期待結果: 成功
+
+TC302: 名前50文字（最大）
+入力: name="a" * 50
+期待結果: 成功
+
+TC303: パスワード8文字（最小）
+入力: password="Pass1234"
+期待結果: 成功
+
+TC304: 年齢0（最小）
+入力: age=0
+期待結果: 成功
+
+TC305: 年齢150（最大）
+入力: age=150
+期待結果: 成功
+
+
+5. 特殊文字
+-------------------
+TC401: 名前に特殊文字
+入力: name="山田<script>"
+期待結果: 成功（エスケープされる）
+
+TC402: メールに特殊文字
+入力: email="test+tag@example.com"
+期待結果: 成功
+
+
+6. パフォーマンス
+-------------------
+TC501: 1000件連続登録
+期待結果: 全て3秒以内に完了
+"""
+```
+
+## 5. データ構造の設計
+
+```python
+"""
+【データ構造設計】
+
+■ Userクラス
+-----------------
+class User:
+    id: int              # 主キー、自動採番
+    name: str            # ユーザー名（2-50文字）
+    email: str           # メールアドレス（ユニーク）
+    password_hash: str   # パスワードハッシュ（60文字固定）
+    age: int | None      # 年齢（0-150、NULL可）
+    created_at: datetime # 作成日時
+    updated_at: datetime # 更新日時
+
+例:
+{
+    "id": 123,
+    "name": "山田太郎",
+    "email": "taro@example.com",
+    "password_hash": "$2b$12$...",
+    "age": 25,
+    "created_at": "2025-10-31T10:00:00",
+    "updated_at": "2025-10-31T10:00:00"
+}
+
+
+■ DBテーブル
+-----------------
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash CHAR(60) NOT NULL,
+    age INTEGER CHECK (age >= 0 AND age <= 150),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_email ON users(email);
+
+
+■ APIレスポンス
+-----------------
+成功時（200 OK）:
+{
+    "success": true,
+    "data": {
+        "id": 123,
+        "name": "太郎",
+        "email": "taro@example.com",
+        "created_at": "2025-10-31T10:00:00"
+    }
+}
+
+失敗時（400 Bad Request）:
+{
+    "success": false,
+    "error": {
+        "code": "VALIDATION_ERROR",
+        "message": "名前は2文字以上必要です",
+        "field": "name"
+    }
+}
+
+失敗時（409 Conflict）:
+{
+    "success": false,
+    "error": {
+        "code": "DUPLICATE_EMAIL",
+        "message": "このメールアドレスは既に登録済みです",
+        "field": "email"
+    }
+}
+"""
+```
+
+## 6. 実装の優先順位
+
+```python
+"""
+【実装順序】
+
+Phase 1: 基本機能（2時間）
+□ バリデーション関数
+  - validate_name()
+  - validate_email()
+  - validate_password()
+  - validate_age()
+  
+□ メイン関数
+  - register_user()
+
+□ 基本テスト
+  - 正常系のみ
+
+
+Phase 2: エラー処理（1時間）
+□ カスタム例外クラス
+  - DuplicateError
+  - ValidationError
+  
+□ 異常系テスト
+  - バリデーションエラー
+  - 重複エラー
+
+
+Phase 3: DB連携（1時間）
+□ DB接続
+  - save_to_db()
+  - check_duplicate()
+  
+□ トランザクション処理
+
+
+Phase 4: 付加機能（1時間）
+□ メール送信
+  - send_confirmation_email()
+  
+□ ログ出力
+  - ログ設定
+
+
+Phase 5: テスト・リファクタリング（1時間）
+□ 全テストケース実装
+□ コードレビュー
+□ ドキュメント整備
+"""
+```
+
+## 7. チェックリスト
+
+```python
+"""
+【実装前チェックリスト】
+
+□ 要件理解
+  □ 機能の目的を理解した
+  □ 入出力を明確にした
+  □ 成功条件を定義した
+
+□ 設計
+  □ 関数名を決めた
+  □ 引数と戻り値の型を決めた
+  □ エラーケースをリストアップした
+  □ データ構造を設計した
+
+□ 依存関係
+  □ 必要なライブラリを確認した
+  □ 外部サービスを確認した
+  □ 環境変数を確認した
+
+□ テスト
+  □ テストケースを作成した
+  □ テストデータを用意した
+
+□ ドキュメント
+  □ 関数のdocstringを書いた
+  □ 設計メモを残した
+
+
+【実装中チェックリスト】
+
+□ コーディング
+  □ 変数名は分かりやすいか
+  □ 関数は小さく分割したか
+  □ コメントは適切か
+
+□ テスト
+  □ 正常系が通るか
+  □ 異常系が通るか
+  □ 境界値が通るか
+
+□ エラー処理
+  □ 適切な例外を投げているか
+  □ エラーメッセージは明確か
+
+
+【実装後チェックリスト】
+
+□ レビュー
+  □ コードレビューを受けた
+  □ テストレビューを受けた
+
+□ ドキュメント
+  □ READMEを更新した
+  □ API仕様書を更新した
+
+□ デプロイ準備
+  □ 環境変数を設定した
+  □ マイグレーションを用意した
+"""
+```
+
+## 8. 実例：完全版
+
+```python
+"""
+=====================================
+機能: ユーザー登録
+作成者: 山田太郎
+作成日: 2025-10-31
+=====================================
+
+【概要】
+新規ユーザーをシステムに登録する機能
+
+【要件】
+FR-001: ユーザー情報（名前、メール、パスワード）を登録できる
+FR-002: メールアドレスは重複不可
+FR-003: パスワードはハッシュ化して保存
+FR-004: 登録後、確認メールを送信
+
+【制約】
+- 名前: 2-50文字
+- メール: RFC 5322準拠
+- パスワード: 8文字以上
+- 処理時間: 1秒以内
+
+【入力】
+name: str (必須)
+email: str (必須)
+password: str (必須)
+age: int (任意)
+
+【出力】
+User オブジェクト
+
+【エラー】
+ValueError: バリデーションエラー
+DuplicateError: 重複エラー
+DBError: DB エラー
+"""
+
+from dataclasses import dataclass
+from datetime import datetime
+import re
+import bcrypt
+
+
+@dataclass
+class User:
+    """ユーザー情報を保持するクラス"""
+    id: int
+    name: str
+    email: str
+    created_at: datetime
+
+
+class ValidationError(ValueError):
+    """バリデーションエラー"""
+    pass
+
+
+class DuplicateError(Exception):
+    """重複エラー"""
+    pass
+
+
+def validate_name(name: str) -> None:
+    """
+    名前のバリデーション
+    
+    Args:
+        name: ユーザー名
+        
+    Raises:
+        ValidationError: 不正な名前
+        
+    Test Cases:
+        - "": NG
+        - "a": NG（短い）
+        - "ab": OK
+        - "a" * 50: OK
+        - "a" * 51: NG（長い）
+    """
+    if not name:
+        raise ValidationError("名前は必須です")
+    if len(name) < 2:
+        raise ValidationError("名前は2文字以上必要です")
+    if len(name) > 50:
+        raise ValidationError("名前は50文字以内です")
+
+
+def validate_email(email: str) -> None:
+    """
+    メールアドレスのバリデーション
+    
+    Args:
+        email: メールアドレス
+        
+    Raises:
+        ValidationError: 不正なメール
+        
+    Test Cases:
+        - "": NG
+        - "invalid": NG
+        - "test@example.com": OK
+        - "test+tag@example.com": OK
+    """
+    if not email:
+        raise ValidationError("メールアドレスは必須です")
+    
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(pattern, email):
+        raise ValidationError("メールアドレスの形式が不正です")
+
+
+def validate_password(password: str) -> None:
+    """
+    パスワードのバリデーション
+    
+    Args:
+        password: パスワード
+        
+    Raises:
+        ValidationError: 不正なパスワード
+        
+    Test Cases:
+        - "": NG
+        - "Pass1": NG（短い）
+        - "Pass1234": OK
+    """
+    if not password:
+        raise ValidationError("パスワードは必須です")
+    if len(password) < 8:
+        raise ValidationError("パスワードは8文字以上必要です")
+
+
+def register_user(name: str, email: str, password: str, age: int = None) -> User:
+    """
+    ユーザーを登録する
+    
+    処理フロー:
+    1. バリデーション
+    2. 重複チェック
+    3. パスワードハッシュ化
+    4. DB保存
+    5. メール送信（非同期）
+    
+    Args:
+        name: ユーザー名（2-50文字）
+        email: メールアドレス
+        password: パスワード（8文字以上）
+        age: 年齢（0-150、任意）
+        
+    Returns:
+        User: ユーザー情報
+        
+    Raises:
+        ValidationError: バリデーションエラー
+        DuplicateError: メール重複
+        DBError: DB エラー
+        
+    Examples:
+        >>> user = register_user("太郎", "taro@example.com", "Pass1234")
+        >>> print(user.name)
+        太郎
+    """
+    # 1. バリデーション
+    validate_name(name)
+    validate_email(email)
+    validate_password(password)
+    
+    # 2. 重複チェック
+    if check_email_exists(email):
+        raise DuplicateError(f"メールアドレス {email} は既に登録済みです")
+    
+    # 3. パスワードハッシュ化
+    password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+    
+    # 4. DB保存
+    user = save_to_database(name, email, password_hash, age)
+    
+    # 5. メール送信（非同期、エラーでも処理継続）
+    try:
+        send_confirmation_email(email)
+    except Exception as e:
+        print(f"メール送信失敗: {e}")
+    
+    return user
+
+
+def check_email_exists(email: str) -> bool:
+    """メールアドレスの重複チェック（スタブ）"""
+    # TODO: DB実装
+    return False
+
+
+def save_to_database(name: str, email: str, password_hash: bytes, age: int) -> User:
+    """DBに保存（スタブ）"""
+    # TODO: DB実装
+    return User(
+        id=1,
+        name=name,
+        email=email,
+        created_at=datetime.now()
+    )
+
+
+def send_confirmation_email(email: str) -> None:
+    """確認メール送信（スタブ）"""
+    # TODO: メール送信実装
+    pass
+
+
+# ==================
+# テストコード
+# ==================
+
+def test_register_user():
+    """テスト"""
+    
+    # 正常系
+    user = register_user("太郎", "taro@example.com", "Pass1234", 25)
+    assert user.name == "太郎"
+    print("✅ 正常系テスト成功")
+    
+    # 異常系: 名前が短い
+    try:
+        register_user("a", "test@example.com", "Pass1234")
+        assert False, "エラーが出るはず"
+    except ValidationError as e:
+        print(f"✅ バリデーションエラー: {e}")
+
+
+if __name__ == "__main__":
+    test_register_user()
+```
+
+## まとめ
+
+```
+実装前に書くべきもの:
+
+✅ 必須
+1. 関数の入出力
+2. エラーケース
+3. テストケース
+
+✅ 推奨
+4. 処理フロー
+5. データ構造
+6. 実装順序
+
+✅ あると良い
+7. チェックリスト
+8. 想定時間
+```
+
+この形式で書けば、実装がスムーズに進みます！
