@@ -1,0 +1,1191 @@
+# 🔒 Pythonカプセル化完全ガイド（セッター・ゲッター + pytest）
+
+## 📚 基本概念
+
+Pythonでは`@property`デコレータを使ってセッター・ゲッターを実装します。
+
+---
+
+## 💪 実装例（コピペOK）
+
+### 1. 基本パターン
+
+```python
+# person.py
+class Person:
+    def __init__(self, name, age):
+        self._name = name  # アンダースコア1つ = プライベート（慣習）
+        self._age = age
+    
+    # ゲッター
+    @property
+    def name(self):
+        """名前を取得"""
+        return self._name
+    
+    # セッター
+    @name.setter
+    def name(self, value):
+        """名前を設定（バリデーション付き）"""
+        if not isinstance(value, str):
+            raise TypeError("名前は文字列である必要があります")
+        if len(value) == 0:
+            raise ValueError("名前は空にできません")
+        self._name = value
+    
+    # ゲッター
+    @property
+    def age(self):
+        """年齢を取得"""
+        return self._age
+    
+    # セッター
+    @age.setter
+    def age(self, value):
+        """年齢を設定（バリデーション付き）"""
+        if not isinstance(value, int):
+            raise TypeError("年齢は整数である必要があります")
+        if value < 0 or value > 150:
+            raise ValueError("年齢は0〜150の範囲で指定してください")
+        self._age = value
+```
+
+**使い方：**
+```python
+person = Person("太郎", 25)
+print(person.name)  # ゲッター → "太郎"
+person.age = 30     # セッター
+```
+
+---
+
+### 2. 読み取り専用プロパティ
+
+```python
+class BankAccount:
+    def __init__(self, owner, balance):
+        self._owner = owner
+        self._balance = balance
+        self._transactions = []  # 取引履歴
+    
+    @property
+    def owner(self):
+        """口座名義（読み取り専用）"""
+        return self._owner
+    
+    @property
+    def balance(self):
+        """残高（読み取り専用）"""
+        return self._balance
+    
+    @property
+    def transactions(self):
+        """取引履歴（読み取り専用のコピーを返す）"""
+        return self._transactions.copy()
+    
+    def deposit(self, amount):
+        """入金"""
+        if amount <= 0:
+            raise ValueError("入金額は正の数である必要があります")
+        self._balance += amount
+        self._transactions.append(f"入金: {amount}円")
+    
+    def withdraw(self, amount):
+        """出金"""
+        if amount <= 0:
+            raise ValueError("出金額は正の数である必要があります")
+        if amount > self._balance:
+            raise ValueError("残高不足です")
+        self._balance -= amount
+        self._transactions.append(f"出金: {amount}円")
+```
+
+---
+
+### 3. 計算プロパティ
+
+```python
+class Rectangle:
+    def __init__(self, width, height):
+        self._width = width
+        self._height = height
+    
+    @property
+    def width(self):
+        return self._width
+    
+    @width.setter
+    def width(self, value):
+        if value <= 0:
+            raise ValueError("幅は正の数である必要があります")
+        self._width = value
+    
+    @property
+    def height(self):
+        return self._height
+    
+    @height.setter
+    def height(self, value):
+        if value <= 0:
+            raise ValueError("高さは正の数である必要があります")
+        self._height = value
+    
+    @property
+    def area(self):
+        """面積（計算プロパティ）"""
+        return self._width * self._height
+    
+    @property
+    def perimeter(self):
+        """周囲の長さ（計算プロパティ）"""
+        return 2 * (self._width + self._height)
+```
+
+---
+
+### 4. バリデーション付き実践クラス
+
+```python
+# user.py
+import re
+from datetime import datetime
+
+class User:
+    def __init__(self, username, email, password):
+        self._username = username
+        self._email = email
+        self._password = password
+        self._created_at = datetime.now()
+        self._is_active = True
+    
+    # ユーザー名
+    @property
+    def username(self):
+        return self._username
+    
+    @username.setter
+    def username(self, value):
+        if not isinstance(value, str):
+            raise TypeError("ユーザー名は文字列である必要があります")
+        if len(value) < 3 or len(value) > 20:
+            raise ValueError("ユーザー名は3〜20文字である必要があります")
+        if not re.match(r'^[a-zA-Z0-9_]+$', value):
+            raise ValueError("ユーザー名は英数字とアンダースコアのみ使用可能です")
+        self._username = value
+    
+    # メールアドレス
+    @property
+    def email(self):
+        return self._email
+    
+    @email.setter
+    def email(self, value):
+        if not isinstance(value, str):
+            raise TypeError("メールアドレスは文字列である必要があります")
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(pattern, value):
+            raise ValueError("無効なメールアドレス形式です")
+        self._email = value
+    
+    # パスワード
+    @property
+    def password(self):
+        """パスワードは取得不可"""
+        raise AttributeError("パスワードは取得できません")
+    
+    @password.setter
+    def password(self, value):
+        if not isinstance(value, str):
+            raise TypeError("パスワードは文字列である必要があります")
+        if len(value) < 8:
+            raise ValueError("パスワードは8文字以上である必要があります")
+        if not any(c.isupper() for c in value):
+            raise ValueError("パスワードには大文字を含める必要があります")
+        if not any(c.isdigit() for c in value):
+            raise ValueError("パスワードには数字を含める必要があります")
+        self._password = self._hash_password(value)
+    
+    # 読み取り専用
+    @property
+    def created_at(self):
+        return self._created_at
+    
+    @property
+    def is_active(self):
+        return self._is_active
+    
+    def _hash_password(self, password):
+        """パスワードをハッシュ化（簡易版）"""
+        import hashlib
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    def activate(self):
+        """アカウント有効化"""
+        self._is_active = True
+    
+    def deactivate(self):
+        """アカウント無効化"""
+        self._is_active = False
+```
+
+---
+
+## 🧪 テストコード（完全版）
+
+```python
+# test_person.py
+import pytest
+from person import Person
+
+class TestPerson:
+    """Personクラスのテスト"""
+    
+    # ====================
+    # 正常系テスト
+    # ====================
+    def test_初期化_正常():
+        person = Person("太郎", 25)
+        assert person.name == "太郎"
+        assert person.age == 25
+    
+    def test_name_ゲッター():
+        person = Person("花子", 30)
+        assert person.name == "花子"
+    
+    def test_name_セッター_正常():
+        person = Person("太郎", 25)
+        person.name = "次郎"
+        assert person.name == "次郎"
+    
+    def test_age_ゲッター():
+        person = Person("太郎", 25)
+        assert person.age == 25
+    
+    def test_age_セッター_正常():
+        person = Person("太郎", 25)
+        person.age = 30
+        assert person.age == 30
+    
+    # ====================
+    # 異常系テスト - name
+    # ====================
+    def test_name_セッター_型エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(TypeError, match="文字列"):
+            person.name = 123
+    
+    def test_name_セッター_空文字エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(ValueError, match="空"):
+            person.name = ""
+    
+    @pytest.mark.parametrize("invalid_name", [
+        123,
+        None,
+        [],
+        {},
+    ])
+    def test_name_セッター_無効な型(invalid_name):
+        person = Person("太郎", 25)
+        with pytest.raises(TypeError):
+            person.name = invalid_name
+    
+    # ====================
+    # 異常系テスト - age
+    # ====================
+    def test_age_セッター_型エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(TypeError, match="整数"):
+            person.age = "30"
+    
+    def test_age_セッター_負数エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(ValueError, match="0〜150"):
+            person.age = -1
+    
+    def test_age_セッター_上限超過エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(ValueError, match="0〜150"):
+            person.age = 151
+    
+    @pytest.mark.parametrize("invalid_age", [
+        -1,
+        -100,
+        151,
+        200,
+    ])
+    def test_age_セッター_範囲外(invalid_age):
+        person = Person("太郎", 25)
+        with pytest.raises(ValueError):
+            person.age = invalid_age
+```
+
+---
+
+```python
+# test_bank_account.py
+import pytest
+from bank_account import BankAccount
+
+class TestBankAccount:
+    """BankAccountクラスのテスト"""
+    
+    @pytest.fixture
+    def account(self):
+        """テスト用の口座"""
+        return BankAccount("太郎", 10000)
+    
+    # ====================
+    # 読み取り専用プロパティのテスト
+    # ====================
+    def test_owner_読み取り専用(account):
+        assert account.owner == "太郎"
+        # セッターが無いので代入できない
+        with pytest.raises(AttributeError):
+            account.owner = "花子"
+    
+    def test_balance_読み取り専用(account):
+        assert account.balance == 10000
+        # セッターが無いので代入できない
+        with pytest.raises(AttributeError):
+            account.balance = 5000
+    
+    def test_transactions_コピーが返される(account):
+        """取引履歴のコピーが返されることを確認"""
+        transactions = account.transactions
+        transactions.append("不正な操作")
+        # 元のデータは変更されていない
+        assert "不正な操作" not in account.transactions
+    
+    # ====================
+    # メソッドのテスト
+    # ====================
+    def test_deposit_正常(account):
+        account.deposit(5000)
+        assert account.balance == 15000
+        assert "入金: 5000円" in account.transactions
+    
+    def test_deposit_負数エラー(account):
+        with pytest.raises(ValueError, match="正の数"):
+            account.deposit(-1000)
+    
+    def test_withdraw_正常(account):
+        account.withdraw(3000)
+        assert account.balance == 7000
+        assert "出金: 3000円" in account.transactions
+    
+    def test_withdraw_残高不足エラー(account):
+        with pytest.raises(ValueError, match="残高不足"):
+            account.withdraw(20000)
+```
+
+---
+
+```python
+# test_rectangle.py
+import pytest
+from rectangle import Rectangle
+
+class TestRectangle:
+    """Rectangleクラスのテスト"""
+    
+    @pytest.fixture
+    def rect(self):
+        return Rectangle(5, 10)
+    
+    # ====================
+    # 正常系
+    # ====================
+    def test_初期化(rect):
+        assert rect.width == 5
+        assert rect.height == 10
+    
+    def test_area_計算プロパティ(rect):
+        assert rect.area == 50
+    
+    def test_perimeter_計算プロパティ(rect):
+        assert rect.perimeter == 30
+    
+    def test_width_変更後のarea(rect):
+        rect.width = 10
+        assert rect.area == 100
+    
+    def test_height_変更後のarea(rect):
+        rect.height = 20
+        assert rect.area == 100
+    
+    # ====================
+    # 異常系
+    # ====================
+    def test_width_負数エラー(rect):
+        with pytest.raises(ValueError, match="正の数"):
+            rect.width = -5
+    
+    def test_height_ゼロエラー(rect):
+        with pytest.raises(ValueError, match="正の数"):
+            rect.height = 0
+    
+    @pytest.mark.parametrize("width, height", [
+        (10, 5),
+        (20, 10),
+        (100, 50),
+    ])
+    def test_複数パターン(width, height):
+        rect = Rectangle(width, height)
+        assert rect.area == width * height
+        assert rect.perimeter == 2 * (width + height)
+```
+
+---
+
+```python
+# test_user.py
+import pytest
+from user import User
+
+class TestUser:
+    """Userクラスのテスト"""
+    
+    @pytest.fixture
+    def user(self):
+        return User("test_user", "test@example.com", "Password123")
+    
+    # ====================
+    # username のテスト
+    # ====================
+    def test_username_正常(user):
+        assert user.username == "test_user"
+        user.username = "new_user"
+        assert user.username == "new_user"
+    
+    def test_username_短すぎるエラー(user):
+        with pytest.raises(ValueError, match="3〜20文字"):
+            user.username = "ab"
+    
+    def test_username_長すぎるエラー(user):
+        with pytest.raises(ValueError, match="3〜20文字"):
+            user.username = "a" * 21
+    
+    def test_username_無効な文字エラー(user):
+        with pytest.raises(ValueError, match="英数字とアンダースコア"):
+            user.username = "test-user"
+    
+    @pytest.mark.parametrize("invalid_username", [
+        "ab",           # 短すぎる
+        "a" * 21,       # 長すぎる
+        "test-user",    # ハイフン不可
+        "test user",    # スペース不可
+        "テストユーザー",  # 日本語不可
+    ])
+    def test_username_無効なパターン(user, invalid_username):
+        with pytest.raises(ValueError):
+            user.username = invalid_username
+    
+    # ====================
+    # email のテスト
+    # ====================
+    def test_email_正常(user):
+        assert user.email == "test@example.com"
+        user.email = "new@example.com"
+        assert user.email == "new@example.com"
+    
+    @pytest.mark.parametrize("invalid_email", [
+        "invalid",
+        "@example.com",
+        "test@",
+        "test@example",
+        "test example@test.com",
+    ])
+    def test_email_無効な形式(user, invalid_email):
+        with pytest.raises(ValueError, match="無効なメールアドレス"):
+            user.email = invalid_email
+    
+    # ====================
+    # password のテスト
+    # ====================
+    def test_password_取得不可(user):
+        """パスワードは取得できない"""
+        with pytest.raises(AttributeError, match="取得できません"):
+            _ = user.password
+    
+    def test_password_短すぎるエラー(user):
+        with pytest.raises(ValueError, match="8文字以上"):
+            user.password = "Pass1"
+    
+    def test_password_大文字なしエラー(user):
+        with pytest.raises(ValueError, match="大文字"):
+            user.password = "password123"
+    
+    def test_password_数字なしエラー(user):
+        with pytest.raises(ValueError, match="数字"):
+            user.password = "Password"
+    
+    @pytest.mark.parametrize("invalid_password", [
+        "Pass1",        # 短すぎる
+        "password123",  # 大文字なし
+        "Password",     # 数字なし
+        "pass",         # 全て不足
+    ])
+    def test_password_無効なパターン(user, invalid_password):
+        with pytest.raises(ValueError):
+            user.password = invalid_password
+    
+    # ====================
+    # 読み取り専用プロパティ
+    # ====================
+    def test_created_at_読み取り専用(user):
+        created = user.created_at
+        assert created is not None
+        # セッターが無いので代入できない
+        with pytest.raises(AttributeError):
+            user.created_at = None
+    
+    def test_is_active_初期値(user):
+        assert user.is_active is True
+    
+    def test_activate_deactivate(user):
+        user.deactivate()
+        assert user.is_active is False
+        user.activate()
+        assert user.is_active is True
+```
+
+---
+
+## 🔥 実行コマンド
+
+```bash
+# 全テスト実行
+pytest -v
+
+# カバレッジ付き
+pytest --cov=. --cov-report=html -v
+
+# 特定のクラスのみ
+pytest test_user.py::TestUser -v
+
+# 特定のテストのみ
+pytest test_user.py::TestUser::test_username_正常 -v
+```
+
+---
+
+## 💡 まとめ
+
+### プロパティの種類
+
+| 種類 | 実装 | 用途 |
+|------|------|------|
+| **読み書き可能** | `@property` + `@xxx.setter` | 通常の属性 |
+| **読み取り専用** | `@property` のみ | 変更不可の属性 |
+| **書き込み専用** | セッターでエラー発生 | パスワードなど |
+| **計算プロパティ** | `@property` で計算 | 面積など |
+
+### テストすべき項目
+
+✅ 正常系：値の設定と取得  
+✅ 異常系：型エラー  
+✅ 異常系：値の範囲エラー  
+✅ 異常系：フォーマットエラー  
+✅ 読み取り専用の確認  
+✅ パラメータ化テスト
+
+---
+
+# 🔒 Pythonカプセル化完全ガイド（セッター・ゲッター + pytest）
+
+## 📚 基本概念
+
+Pythonでは`@property`デコレータを使ってセッター・ゲッターを実装します。
+
+---
+
+## 💪 実装例（コピペOK）
+
+### 1. 基本パターン
+
+```python
+# person.py
+class Person:
+    def __init__(self, name, age):
+        self._name = name  # アンダースコア1つ = プライベート（慣習）
+        self._age = age
+    
+    # ゲッター
+    @property
+    def name(self):
+        """名前を取得"""
+        return self._name
+    
+    # セッター
+    @name.setter
+    def name(self, value):
+        """名前を設定（バリデーション付き）"""
+        if not isinstance(value, str):
+            raise TypeError("名前は文字列である必要があります")
+        if len(value) == 0:
+            raise ValueError("名前は空にできません")
+        self._name = value
+    
+    # ゲッター
+    @property
+    def age(self):
+        """年齢を取得"""
+        return self._age
+    
+    # セッター
+    @age.setter
+    def age(self, value):
+        """年齢を設定（バリデーション付き）"""
+        if not isinstance(value, int):
+            raise TypeError("年齢は整数である必要があります")
+        if value < 0 or value > 150:
+            raise ValueError("年齢は0〜150の範囲で指定してください")
+        self._age = value
+```
+
+**使い方：**
+```python
+person = Person("太郎", 25)
+print(person.name)  # ゲッター → "太郎"
+person.age = 30     # セッター
+```
+
+---
+
+### 2. 読み取り専用プロパティ
+
+```python
+class BankAccount:
+    def __init__(self, owner, balance):
+        self._owner = owner
+        self._balance = balance
+        self._transactions = []  # 取引履歴
+    
+    @property
+    def owner(self):
+        """口座名義（読み取り専用）"""
+        return self._owner
+    
+    @property
+    def balance(self):
+        """残高（読み取り専用）"""
+        return self._balance
+    
+    @property
+    def transactions(self):
+        """取引履歴（読み取り専用のコピーを返す）"""
+        return self._transactions.copy()
+    
+    def deposit(self, amount):
+        """入金"""
+        if amount <= 0:
+            raise ValueError("入金額は正の数である必要があります")
+        self._balance += amount
+        self._transactions.append(f"入金: {amount}円")
+    
+    def withdraw(self, amount):
+        """出金"""
+        if amount <= 0:
+            raise ValueError("出金額は正の数である必要があります")
+        if amount > self._balance:
+            raise ValueError("残高不足です")
+        self._balance -= amount
+        self._transactions.append(f"出金: {amount}円")
+```
+
+---
+
+### 3. 計算プロパティ
+
+```python
+class Rectangle:
+    def __init__(self, width, height):
+        self._width = width
+        self._height = height
+    
+    @property
+    def width(self):
+        return self._width
+    
+    @width.setter
+    def width(self, value):
+        if value <= 0:
+            raise ValueError("幅は正の数である必要があります")
+        self._width = value
+    
+    @property
+    def height(self):
+        return self._height
+    
+    @height.setter
+    def height(self, value):
+        if value <= 0:
+            raise ValueError("高さは正の数である必要があります")
+        self._height = value
+    
+    @property
+    def area(self):
+        """面積（計算プロパティ）"""
+        return self._width * self._height
+    
+    @property
+    def perimeter(self):
+        """周囲の長さ（計算プロパティ）"""
+        return 2 * (self._width + self._height)
+```
+
+---
+
+### 4. バリデーション付き実践クラス
+
+```python
+# user.py
+import re
+from datetime import datetime
+
+class User:
+    def __init__(self, username, email, password):
+        self._username = username
+        self._email = email
+        self._password = password
+        self._created_at = datetime.now()
+        self._is_active = True
+    
+    # ユーザー名
+    @property
+    def username(self):
+        return self._username
+    
+    @username.setter
+    def username(self, value):
+        if not isinstance(value, str):
+            raise TypeError("ユーザー名は文字列である必要があります")
+        if len(value) < 3 or len(value) > 20:
+            raise ValueError("ユーザー名は3〜20文字である必要があります")
+        if not re.match(r'^[a-zA-Z0-9_]+$', value):
+            raise ValueError("ユーザー名は英数字とアンダースコアのみ使用可能です")
+        self._username = value
+    
+    # メールアドレス
+    @property
+    def email(self):
+        return self._email
+    
+    @email.setter
+    def email(self, value):
+        if not isinstance(value, str):
+            raise TypeError("メールアドレスは文字列である必要があります")
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(pattern, value):
+            raise ValueError("無効なメールアドレス形式です")
+        self._email = value
+    
+    # パスワード
+    @property
+    def password(self):
+        """パスワードは取得不可"""
+        raise AttributeError("パスワードは取得できません")
+    
+    @password.setter
+    def password(self, value):
+        if not isinstance(value, str):
+            raise TypeError("パスワードは文字列である必要があります")
+        if len(value) < 8:
+            raise ValueError("パスワードは8文字以上である必要があります")
+        if not any(c.isupper() for c in value):
+            raise ValueError("パスワードには大文字を含める必要があります")
+        if not any(c.isdigit() for c in value):
+            raise ValueError("パスワードには数字を含める必要があります")
+        self._password = self._hash_password(value)
+    
+    # 読み取り専用
+    @property
+    def created_at(self):
+        return self._created_at
+    
+    @property
+    def is_active(self):
+        return self._is_active
+    
+    def _hash_password(self, password):
+        """パスワードをハッシュ化（簡易版）"""
+        import hashlib
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    def activate(self):
+        """アカウント有効化"""
+        self._is_active = True
+    
+    def deactivate(self):
+        """アカウント無効化"""
+        self._is_active = False
+```
+
+---
+
+## 🧪 テストコード（完全版）
+
+```python
+# test_person.py
+import pytest
+from person import Person
+
+class TestPerson:
+    """Personクラスのテスト"""
+    
+    # ====================
+    # 正常系テスト
+    # ====================
+    def test_初期化_正常():
+        person = Person("太郎", 25)
+        assert person.name == "太郎"
+        assert person.age == 25
+    
+    def test_name_ゲッター():
+        person = Person("花子", 30)
+        assert person.name == "花子"
+    
+    def test_name_セッター_正常():
+        person = Person("太郎", 25)
+        person.name = "次郎"
+        assert person.name == "次郎"
+    
+    def test_age_ゲッター():
+        person = Person("太郎", 25)
+        assert person.age == 25
+    
+    def test_age_セッター_正常():
+        person = Person("太郎", 25)
+        person.age = 30
+        assert person.age == 30
+    
+    # ====================
+    # 異常系テスト - name
+    # ====================
+    def test_name_セッター_型エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(TypeError, match="文字列"):
+            person.name = 123
+    
+    def test_name_セッター_空文字エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(ValueError, match="空"):
+            person.name = ""
+    
+    @pytest.mark.parametrize("invalid_name", [
+        123,
+        None,
+        [],
+        {},
+    ])
+    def test_name_セッター_無効な型(invalid_name):
+        person = Person("太郎", 25)
+        with pytest.raises(TypeError):
+            person.name = invalid_name
+    
+    # ====================
+    # 異常系テスト - age
+    # ====================
+    def test_age_セッター_型エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(TypeError, match="整数"):
+            person.age = "30"
+    
+    def test_age_セッター_負数エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(ValueError, match="0〜150"):
+            person.age = -1
+    
+    def test_age_セッター_上限超過エラー():
+        person = Person("太郎", 25)
+        with pytest.raises(ValueError, match="0〜150"):
+            person.age = 151
+    
+    @pytest.mark.parametrize("invalid_age", [
+        -1,
+        -100,
+        151,
+        200,
+    ])
+    def test_age_セッター_範囲外(invalid_age):
+        person = Person("太郎", 25)
+        with pytest.raises(ValueError):
+            person.age = invalid_age
+```
+
+---
+
+```python
+# test_bank_account.py
+import pytest
+from bank_account import BankAccount
+
+class TestBankAccount:
+    """BankAccountクラスのテスト"""
+    
+    @pytest.fixture
+    def account(self):
+        """テスト用の口座"""
+        return BankAccount("太郎", 10000)
+    
+    # ====================
+    # 読み取り専用プロパティのテスト
+    # ====================
+    def test_owner_読み取り専用(account):
+        assert account.owner == "太郎"
+        # セッターが無いので代入できない
+        with pytest.raises(AttributeError):
+            account.owner = "花子"
+    
+    def test_balance_読み取り専用(account):
+        assert account.balance == 10000
+        # セッターが無いので代入できない
+        with pytest.raises(AttributeError):
+            account.balance = 5000
+    
+    def test_transactions_コピーが返される(account):
+        """取引履歴のコピーが返されることを確認"""
+        transactions = account.transactions
+        transactions.append("不正な操作")
+        # 元のデータは変更されていない
+        assert "不正な操作" not in account.transactions
+    
+    # ====================
+    # メソッドのテスト
+    # ====================
+    def test_deposit_正常(account):
+        account.deposit(5000)
+        assert account.balance == 15000
+        assert "入金: 5000円" in account.transactions
+    
+    def test_deposit_負数エラー(account):
+        with pytest.raises(ValueError, match="正の数"):
+            account.deposit(-1000)
+    
+    def test_withdraw_正常(account):
+        account.withdraw(3000)
+        assert account.balance == 7000
+        assert "出金: 3000円" in account.transactions
+    
+    def test_withdraw_残高不足エラー(account):
+        with pytest.raises(ValueError, match="残高不足"):
+            account.withdraw(20000)
+```
+
+---
+
+```python
+# test_rectangle.py
+import pytest
+from rectangle import Rectangle
+
+class TestRectangle:
+    """Rectangleクラスのテスト"""
+    
+    @pytest.fixture
+    def rect(self):
+        return Rectangle(5, 10)
+    
+    # ====================
+    # 正常系
+    # ====================
+    def test_初期化(rect):
+        assert rect.width == 5
+        assert rect.height == 10
+    
+    def test_area_計算プロパティ(rect):
+        assert rect.area == 50
+    
+    def test_perimeter_計算プロパティ(rect):
+        assert rect.perimeter == 30
+    
+    def test_width_変更後のarea(rect):
+        rect.width = 10
+        assert rect.area == 100
+    
+    def test_height_変更後のarea(rect):
+        rect.height = 20
+        assert rect.area == 100
+    
+    # ====================
+    # 異常系
+    # ====================
+    def test_width_負数エラー(rect):
+        with pytest.raises(ValueError, match="正の数"):
+            rect.width = -5
+    
+    def test_height_ゼロエラー(rect):
+        with pytest.raises(ValueError, match="正の数"):
+            rect.height = 0
+    
+    @pytest.mark.parametrize("width, height", [
+        (10, 5),
+        (20, 10),
+        (100, 50),
+    ])
+    def test_複数パターン(width, height):
+        rect = Rectangle(width, height)
+        assert rect.area == width * height
+        assert rect.perimeter == 2 * (width + height)
+```
+
+---
+
+```python
+# test_user.py
+import pytest
+from user import User
+
+class TestUser:
+    """Userクラスのテスト"""
+    
+    @pytest.fixture
+    def user(self):
+        return User("test_user", "test@example.com", "Password123")
+    
+    # ====================
+    # username のテスト
+    # ====================
+    def test_username_正常(user):
+        assert user.username == "test_user"
+        user.username = "new_user"
+        assert user.username == "new_user"
+    
+    def test_username_短すぎるエラー(user):
+        with pytest.raises(ValueError, match="3〜20文字"):
+            user.username = "ab"
+    
+    def test_username_長すぎるエラー(user):
+        with pytest.raises(ValueError, match="3〜20文字"):
+            user.username = "a" * 21
+    
+    def test_username_無効な文字エラー(user):
+        with pytest.raises(ValueError, match="英数字とアンダースコア"):
+            user.username = "test-user"
+    
+    @pytest.mark.parametrize("invalid_username", [
+        "ab",           # 短すぎる
+        "a" * 21,       # 長すぎる
+        "test-user",    # ハイフン不可
+        "test user",    # スペース不可
+        "テストユーザー",  # 日本語不可
+    ])
+    def test_username_無効なパターン(user, invalid_username):
+        with pytest.raises(ValueError):
+            user.username = invalid_username
+    
+    # ====================
+    # email のテスト
+    # ====================
+    def test_email_正常(user):
+        assert user.email == "test@example.com"
+        user.email = "new@example.com"
+        assert user.email == "new@example.com"
+    
+    @pytest.mark.parametrize("invalid_email", [
+        "invalid",
+        "@example.com",
+        "test@",
+        "test@example",
+        "test example@test.com",
+    ])
+    def test_email_無効な形式(user, invalid_email):
+        with pytest.raises(ValueError, match="無効なメールアドレス"):
+            user.email = invalid_email
+    
+    # ====================
+    # password のテスト
+    # ====================
+    def test_password_取得不可(user):
+        """パスワードは取得できない"""
+        with pytest.raises(AttributeError, match="取得できません"):
+            _ = user.password
+    
+    def test_password_短すぎるエラー(user):
+        with pytest.raises(ValueError, match="8文字以上"):
+            user.password = "Pass1"
+    
+    def test_password_大文字なしエラー(user):
+        with pytest.raises(ValueError, match="大文字"):
+            user.password = "password123"
+    
+    def test_password_数字なしエラー(user):
+        with pytest.raises(ValueError, match="数字"):
+            user.password = "Password"
+    
+    @pytest.mark.parametrize("invalid_password", [
+        "Pass1",        # 短すぎる
+        "password123",  # 大文字なし
+        "Password",     # 数字なし
+        "pass",         # 全て不足
+    ])
+    def test_password_無効なパターン(user, invalid_password):
+        with pytest.raises(ValueError):
+            user.password = invalid_password
+    
+    # ====================
+    # 読み取り専用プロパティ
+    # ====================
+    def test_created_at_読み取り専用(user):
+        created = user.created_at
+        assert created is not None
+        # セッターが無いので代入できない
+        with pytest.raises(AttributeError):
+            user.created_at = None
+    
+    def test_is_active_初期値(user):
+        assert user.is_active is True
+    
+    def test_activate_deactivate(user):
+        user.deactivate()
+        assert user.is_active is False
+        user.activate()
+        assert user.is_active is True
+```
+
+---
+
+## 🔥 実行コマンド
+
+```bash
+# 全テスト実行
+pytest -v
+
+# カバレッジ付き
+pytest --cov=. --cov-report=html -v
+
+# 特定のクラスのみ
+pytest test_user.py::TestUser -v
+
+# 特定のテストのみ
+pytest test_user.py::TestUser::test_username_正常 -v
+```
+
+---
+
+## 💡 まとめ
+
+### プロパティの種類
+
+| 種類 | 実装 | 用途 |
+|------|------|------|
+| **読み書き可能** | `@property` + `@xxx.setter` | 通常の属性 |
+| **読み取り専用** | `@property` のみ | 変更不可の属性 |
+| **書き込み専用** | セッターでエラー発生 | パスワードなど |
+| **計算プロパティ** | `@property` で計算 | 面積など |
+
+### テストすべき項目
+
+✅ 正常系：値の設定と取得  
+✅ 異常系：型エラー  
+✅ 異常系：値の範囲エラー  
+✅ 異常系：フォーマットエラー  
+✅ 読み取り専用の確認  
+✅ パラメータ化テスト
+
+---
+
+**このコードをコピペして使ってください！🚀**
+
+**このコードをコピペして使ってください！🚀**
