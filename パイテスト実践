@@ -1,0 +1,1001 @@
+# Python関数テストの完全ガイド：pytest入門
+
+## 📁 ディレクトリ構造パターン
+
+### パターン1：同一ディレクトリ（シンプル）
+```
+my_project/
+├── calculator.py      # 関数本体
+└── test_calculator.py # テスト
+```
+
+### パターン2：別ディレクトリ（実践的）
+```
+my_project/
+├── src/
+│   └── calculator.py  # 関数本体
+├── tests/
+│   └── test_calculator.py # テスト
+└── __init__.py
+```
+
+### パターン3：パッケージ構造（プロジェクト向け）
+```
+my_project/
+├── src/
+│   ├── __init__.py
+│   ├── calculator.py
+│   └── utils.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_calculator.py
+│   └── test_utils.py
+├── pytest.ini         # pytest設定
+└── requirements.txt   # 依存関係
+```
+
+---
+
+## 🚀 ステップ1：pytestのインストール
+
+```bash
+# pytestをインストール
+pip install pytest
+
+# バージョン確認
+pytest --version
+```
+
+---
+
+## 📝 ステップ2：同一ディレクトリで始める
+
+### ファイル1: `calculator.py` (関数本体)
+
+```python
+# calculator.py
+"""計算機モジュール"""
+
+
+def add(a, b):
+    """
+    2つの数を足す
+    
+    Args:
+        a: 最初の数
+        b: 2番目の数
+    
+    Returns:
+        a + b の結果
+    """
+    # aとbを足して返す
+    return a + b
+
+
+def subtract(a, b):
+    """
+    2つの数を引く
+    
+    Args:
+        a: 引かれる数
+        b: 引く数
+    
+    Returns:
+        a - b の結果
+    """
+    # aからbを引いて返す
+    return a - b
+
+
+def multiply(a, b):
+    """
+    2つの数を掛ける
+    
+    Args:
+        a: 最初の数
+        b: 2番目の数
+    
+    Returns:
+        a * b の結果
+    """
+    # aとbを掛けて返す
+    return a * b
+
+
+def divide(a, b):
+    """
+    2つの数を割る
+    
+    Args:
+        a: 割られる数
+        b: 割る数
+    
+    Returns:
+        a / b の結果
+    
+    Raises:
+        ValueError: bが0の場合
+    """
+    # bが0かチェック
+    if b == 0:
+        # 0で割ろうとしたらエラーを発生させる
+        raise ValueError("0で割ることはできません")
+    
+    # aをbで割って返す
+    return a / b
+
+
+def is_even(n):
+    """
+    偶数かどうか判定
+    
+    Args:
+        n: 判定する整数
+    
+    Returns:
+        偶数ならTrue、奇数ならFalse
+    """
+    # nを2で割った余りが0なら偶数
+    return n % 2 == 0
+```
+
+---
+
+### ファイル2: `test_calculator.py` (テスト)
+
+```python
+# test_calculator.py
+"""calculatorモジュールのテスト"""
+
+# pytest をインポート（テストフレームワーク）
+import pytest
+
+# テスト対象の関数をインポート
+from calculator import add, subtract, multiply, divide, is_even
+
+
+# ========================================
+# addのテスト
+# ========================================
+
+def test_add_positive_numbers():
+    """正の数同士の足し算をテスト"""
+    # 関数を実行
+    result = add(3, 5)
+    # 期待値と比較（assertで検証）
+    assert result == 8  # 3 + 5 = 8 のはず
+
+
+def test_add_negative_numbers():
+    """負の数を含む足し算をテスト"""
+    # -2 + 5 = 3 のはず
+    assert add(-2, 5) == 3
+    
+    # -3 + -7 = -10 のはず
+    assert add(-3, -7) == -10
+
+
+def test_add_zero():
+    """0を含む足し算をテスト"""
+    # 0 + 5 = 5 のはず
+    assert add(0, 5) == 5
+    
+    # 10 + 0 = 10 のはず
+    assert add(10, 0) == 10
+
+
+# ========================================
+# subtractのテスト
+# ========================================
+
+def test_subtract_positive_numbers():
+    """正の数同士の引き算をテスト"""
+    # 10 - 3 = 7 のはず
+    assert subtract(10, 3) == 7
+
+
+def test_subtract_negative_result():
+    """結果が負になる引き算をテスト"""
+    # 5 - 10 = -5 のはず
+    assert subtract(5, 10) == -5
+
+
+# ========================================
+# multiplyのテスト
+# ========================================
+
+def test_multiply_positive_numbers():
+    """正の数同士の掛け算をテスト"""
+    # 4 * 5 = 20 のはず
+    assert multiply(4, 5) == 20
+
+
+def test_multiply_by_zero():
+    """0を掛けるテスト"""
+    # 何に0を掛けても0
+    assert multiply(100, 0) == 0
+    assert multiply(0, 50) == 0
+
+
+def test_multiply_negative_numbers():
+    """負の数を含む掛け算をテスト"""
+    # -3 * 4 = -12 のはず
+    assert multiply(-3, 4) == -12
+    
+    # -2 * -5 = 10 のはず（負×負=正）
+    assert multiply(-2, -5) == 10
+
+
+# ========================================
+# divideのテスト
+# ========================================
+
+def test_divide_positive_numbers():
+    """正の数同士の割り算をテスト"""
+    # 10 / 2 = 5.0 のはず
+    assert divide(10, 2) == 5.0
+
+
+def test_divide_with_remainder():
+    """割り切れない割り算をテスト"""
+    # 7 / 2 = 3.5 のはず
+    result = divide(7, 2)
+    # 浮動小数点なので近似比較
+    assert result == 3.5
+
+
+def test_divide_by_zero():
+    """0で割る場合のエラーをテスト"""
+    # with文：例外が発生することを期待
+    with pytest.raises(ValueError):
+        # この行でValueErrorが発生するはず
+        divide(10, 0)
+    
+    # エラーメッセージも確認したい場合
+    with pytest.raises(ValueError, match="0で割ることはできません"):
+        divide(5, 0)
+
+
+# ========================================
+# is_evenのテスト
+# ========================================
+
+def test_is_even_with_even_numbers():
+    """偶数のテスト"""
+    # 2は偶数なのでTrue
+    assert is_even(2) == True
+    
+    # 100は偶数なのでTrue
+    assert is_even(100) == True
+    
+    # 0は偶数なのでTrue
+    assert is_even(0) == True
+
+
+def test_is_even_with_odd_numbers():
+    """奇数のテスト"""
+    # 3は奇数なのでFalse
+    assert is_even(3) == False
+    
+    # 99は奇数なのでFalse
+    assert is_even(99) == False
+
+
+def test_is_even_with_negative_numbers():
+    """負の数のテスト"""
+    # -2は偶数
+    assert is_even(-2) == True
+    
+    # -3は奇数
+    assert is_even(-3) == False
+```
+
+---
+
+### 実行方法
+
+```bash
+# 現在のディレクトリで全テストを実行
+pytest
+
+# 詳細表示（verbose）
+pytest -v
+
+# 特定のファイルのみ実行
+pytest test_calculator.py
+
+# 特定のテスト関数のみ実行
+pytest test_calculator.py::test_add_positive_numbers
+
+# テスト結果を色付きで表示
+pytest --color=yes
+```
+
+**実行結果例：**
+```
+================================ test session starts ================================
+collected 13 items
+
+test_calculator.py::test_add_positive_numbers PASSED                         [  7%]
+test_calculator.py::test_add_negative_numbers PASSED                         [ 15%]
+test_calculator.py::test_add_zero PASSED                                     [ 23%]
+test_calculator.py::test_subtract_positive_numbers PASSED                    [ 30%]
+test_calculator.py::test_subtract_negative_result PASSED                     [ 38%]
+test_calculator.py::test_multiply_positive_numbers PASSED                    [ 46%]
+test_calculator.py::test_multiply_by_zero PASSED                             [ 53%]
+test_calculator.py::test_multiply_negative_numbers PASSED                    [ 61%]
+test_calculator.py::test_divide_positive_numbers PASSED                      [ 69%]
+test_calculator.py::test_divide_with_remainder PASSED                        [ 76%]
+test_calculator.py::test_divide_by_zero PASSED                               [ 84%]
+test_calculator.py::test_is_even_with_even_numbers PASSED                    [ 92%]
+test_calculator.py::test_is_even_with_odd_numbers PASSED                     [100%]
+
+================================ 13 passed in 0.02s =================================
+```
+
+---
+
+## 📂 ステップ3：別ディレクトリに分ける
+
+### ディレクトリ構造を作成
+
+```bash
+# ディレクトリを作成
+mkdir my_project
+cd my_project
+mkdir src tests
+
+# ファイルを作成
+touch src/__init__.py
+touch src/calculator.py
+touch tests/__init__.py
+touch tests/test_calculator.py
+```
+
+**最終的な構造：**
+```
+my_project/
+├── src/
+│   ├── __init__.py          # 空でOK
+│   └── calculator.py        # 関数本体
+└── tests/
+    ├── __init__.py          # 空でOK
+    └── test_calculator.py   # テスト
+```
+
+---
+
+### ファイル1: `src/__init__.py`
+
+```python
+# src/__init__.py
+"""srcパッケージの初期化ファイル"""
+
+# このファイルは空でもOK
+# パッケージとして認識させるために必要
+```
+
+---
+
+### ファイル2: `src/calculator.py`
+
+```python
+# src/calculator.py
+"""計算機モジュール（別ディレクトリ版）"""
+
+
+def add(a, b):
+    """2つの数を足す"""
+    # aとbを足して返す
+    return a + b
+
+
+def subtract(a, b):
+    """2つの数を引く"""
+    # aからbを引いて返す
+    return a - b
+
+
+def multiply(a, b):
+    """2つの数を掛ける"""
+    # aとbを掛けて返す
+    return a * b
+
+
+def divide(a, b):
+    """2つの数を割る"""
+    # bが0かチェック
+    if b == 0:
+        # エラーを発生
+        raise ValueError("0で割ることはできません")
+    # aをbで割る
+    return a / b
+
+
+def power(base, exponent):
+    """累乗を計算"""
+    # baseのexponent乗を返す
+    return base ** exponent
+
+
+def factorial(n):
+    """階乗を計算"""
+    # nが負の数ならエラー
+    if n < 0:
+        raise ValueError("負の数の階乗は計算できません")
+    
+    # 0の階乗は1
+    if n == 0:
+        return 1
+    
+    # 1から始める
+    result = 1
+    # 1からnまでループ
+    for i in range(1, n + 1):
+        # resultにiを掛ける
+        result *= i
+    
+    # 結果を返す
+    return result
+```
+
+---
+
+### ファイル3: `tests/__init__.py`
+
+```python
+# tests/__init__.py
+"""testsパッケージの初期化ファイル"""
+
+# このファイルは空でもOK
+```
+
+---
+
+### ファイル4: `tests/test_calculator.py`
+
+```python
+# tests/test_calculator.py
+"""calculator モジュールのテスト（別ディレクトリ版）"""
+
+# システムパスを操作するためのモジュール
+import sys
+# OSのパス操作モジュール
+from pathlib import Path
+
+# テストフレームワーク
+import pytest
+
+# 現在のファイルのパス
+current_file = Path(__file__)
+# 現在のファイルの親ディレクトリ（tests/）
+tests_dir = current_file.parent
+# さらに親ディレクトリ（my_project/）
+project_root = tests_dir.parent
+
+# srcディレクトリのパス
+src_dir = project_root / "src"
+
+# srcディレクトリをPythonのパスに追加
+# これで src.calculator をインポートできるようになる
+sys.path.insert(0, str(src_dir))
+
+# テスト対象の関数をインポート
+from calculator import (
+    add,           # 足し算
+    subtract,      # 引き算
+    multiply,      # 掛け算
+    divide,        # 割り算
+    power,         # 累乗
+    factorial      # 階乗
+)
+
+
+# ========================================
+# add（足し算）のテスト
+# ========================================
+
+def test_add_basic():
+    """基本的な足し算"""
+    # 2 + 3 = 5
+    result = add(2, 3)
+    assert result == 5
+
+
+def test_add_negative():
+    """負の数の足し算"""
+    # -5 + 3 = -2
+    assert add(-5, 3) == -2
+
+
+def test_add_float():
+    """小数の足し算"""
+    # 1.5 + 2.5 = 4.0
+    result = add(1.5, 2.5)
+    assert result == 4.0
+
+
+# ========================================
+# subtract（引き算）のテスト
+# ========================================
+
+def test_subtract_basic():
+    """基本的な引き算"""
+    # 10 - 4 = 6
+    assert subtract(10, 4) == 6
+
+
+def test_subtract_negative_result():
+    """結果が負になる引き算"""
+    # 3 - 10 = -7
+    assert subtract(3, 10) == -7
+
+
+# ========================================
+# multiply（掛け算）のテスト
+# ========================================
+
+def test_multiply_basic():
+    """基本的な掛け算"""
+    # 3 * 7 = 21
+    assert multiply(3, 7) == 21
+
+
+def test_multiply_by_zero():
+    """0を掛ける"""
+    # 任意の数 * 0 = 0
+    assert multiply(999, 0) == 0
+
+
+def test_multiply_negative():
+    """負の数の掛け算"""
+    # -4 * 5 = -20
+    assert multiply(-4, 5) == -20
+    # -3 * -3 = 9
+    assert multiply(-3, -3) == 9
+
+
+# ========================================
+# divide（割り算）のテスト
+# ========================================
+
+def test_divide_basic():
+    """基本的な割り算"""
+    # 20 / 4 = 5.0
+    assert divide(20, 4) == 5.0
+
+
+def test_divide_with_float_result():
+    """小数になる割り算"""
+    # 7 / 2 = 3.5
+    result = divide(7, 2)
+    assert result == 3.5
+
+
+def test_divide_by_zero_raises_error():
+    """0で割るとエラー"""
+    # ValueErrorが発生することを期待
+    with pytest.raises(ValueError):
+        # この行でエラーが発生
+        divide(10, 0)
+
+
+def test_divide_negative():
+    """負の数の割り算"""
+    # -10 / 2 = -5.0
+    assert divide(-10, 2) == -5.0
+
+
+# ========================================
+# power（累乗）のテスト
+# ========================================
+
+def test_power_basic():
+    """基本的な累乗"""
+    # 2の3乗 = 8
+    assert power(2, 3) == 8
+
+
+def test_power_zero_exponent():
+    """指数が0の場合"""
+    # 任意の数の0乗 = 1
+    assert power(5, 0) == 1
+    assert power(100, 0) == 1
+
+
+def test_power_negative_exponent():
+    """負の指数"""
+    # 2の-2乗 = 0.25
+    result = power(2, -2)
+    assert result == 0.25
+
+
+# ========================================
+# factorial（階乗）のテスト
+# ========================================
+
+def test_factorial_zero():
+    """0の階乗"""
+    # 0! = 1
+    assert factorial(0) == 1
+
+
+def test_factorial_basic():
+    """基本的な階乗"""
+    # 5! = 5 * 4 * 3 * 2 * 1 = 120
+    assert factorial(5) == 120
+
+
+def test_factorial_one():
+    """1の階乗"""
+    # 1! = 1
+    assert factorial(1) == 1
+
+
+def test_factorial_large_number():
+    """大きな数の階乗"""
+    # 10! = 3628800
+    assert factorial(10) == 3628800
+
+
+def test_factorial_negative_raises_error():
+    """負の数の階乗はエラー"""
+    # ValueErrorが発生することを期待
+    with pytest.raises(ValueError):
+        # この行でエラー
+        factorial(-1)
+    
+    # エラーメッセージも確認
+    with pytest.raises(ValueError, match="負の数の階乗は計算できません"):
+        factorial(-5)
+
+
+# ========================================
+# パラメータ化テスト（複数のケースを一度にテスト）
+# ========================================
+
+@pytest.mark.parametrize("a, b, expected", [
+    # (a, b, 期待される結果)
+    (1, 1, 2),      # 1 + 1 = 2
+    (0, 0, 0),      # 0 + 0 = 0
+    (5, -3, 2),     # 5 + (-3) = 2
+    (-10, -5, -15), # -10 + (-5) = -15
+    (100, 200, 300),# 100 + 200 = 300
+])
+def test_add_parametrized(a, b, expected):
+    """パラメータ化されたaddのテスト"""
+    # addを実行
+    result = add(a, b)
+    # 期待値と比較
+    assert result == expected
+
+
+@pytest.mark.parametrize("n, expected", [
+    # (n, 期待される階乗)
+    (0, 1),      # 0! = 1
+    (1, 1),      # 1! = 1
+    (2, 2),      # 2! = 2
+    (3, 6),      # 3! = 6
+    (4, 24),     # 4! = 24
+    (5, 120),    # 5! = 120
+])
+def test_factorial_parametrized(n, expected):
+    """パラメータ化されたfactorialのテスト"""
+    # factorialを実行
+    result = factorial(n)
+    # 期待値と比較
+    assert result == expected
+```
+
+---
+
+### テストの実行（別ディレクトリ版）
+
+```bash
+# my_project ディレクトリで実行
+
+# 全テストを実行
+pytest
+
+# testsディレクトリを明示的に指定
+pytest tests/
+
+# 詳細表示
+pytest -v
+
+# 特定のテストファイル
+pytest tests/test_calculator.py
+
+# カバレッジも表示（要インストール：pip install pytest-cov）
+pytest --cov=src tests/
+```
+
+---
+
+## ⚙️ ステップ4：pytest設定ファイル
+
+### ファイル: `pytest.ini`
+
+```ini
+# pytest.ini
+# pytestの設定ファイル
+
+[pytest]
+# テストファイルの検索パターン
+python_files = test_*.py *_test.py
+
+# テスト関数の検索パターン
+python_functions = test_*
+
+# テストクラスの検索パターン
+python_classes = Test*
+
+# テストを探すディレクトリ
+testpaths = tests
+
+# 詳細出力をデフォルトに
+addopts = 
+    -v
+    --strict-markers
+    --color=yes
+
+# カスタムマーカーの定義
+markers =
+    slow: 実行に時間がかかるテスト
+    integration: 統合テスト
+    unit: 単体テスト
+```
+
+---
+
+## 🎯 ステップ5：高度なテストテクニック
+
+### ファイル: `tests/test_advanced.py`
+
+```python
+# tests/test_advanced.py
+"""高度なテストテクニック"""
+
+import sys
+from pathlib import Path
+
+# パスの設定
+current_file = Path(__file__)
+project_root = current_file.parent.parent
+src_dir = project_root / "src"
+sys.path.insert(0, str(src_dir))
+
+import pytest
+from calculator import add, divide, factorial
+
+
+# ========================================
+# フィクスチャ（テストデータの準備）
+# ========================================
+
+@pytest.fixture
+def sample_numbers():
+    """テスト用の数値リストを提供"""
+    # テスト前に実行される
+    print("\n[setUp] テストデータを準備")
+    # テストで使うデータ
+    data = [1, 2, 3, 4, 5]
+    # テストにデータを渡す
+    yield data
+    # テスト後に実行される（クリーンアップ）
+    print("\n[tearDown] テストデータをクリーンアップ")
+
+
+def test_with_fixture(sample_numbers):
+    """フィクスチャを使うテスト"""
+    # sample_numbers には [1, 2, 3, 4, 5] が入っている
+    assert len(sample_numbers) == 5
+    # 合計は15
+    assert sum(sample_numbers) == 15
+
+
+# ========================================
+# パラメータ化テスト（複数ケースを効率的に）
+# ========================================
+
+@pytest.mark.parametrize("dividend, divisor, expected", [
+    # (割られる数, 割る数, 期待結果)
+    (10, 2, 5.0),    # 10 / 2 = 5.0
+    (9, 3, 3.0),     # 9 / 3 = 3.0
+    (7, 2, 3.5),     # 7 / 2 = 3.5
+    (1, 1, 1.0),     # 1 / 1 = 1.0
+    (-10, 2, -5.0),  # -10 / 2 = -5.0
+])
+def test_divide_parametrized(dividend, divisor, expected):
+    """複数のケースを一度にテスト"""
+    # divideを実行
+    result = divide(dividend, divisor)
+    # 期待値と比較
+    assert result == expected
+
+
+# ========================================
+# 例外テスト（エラーが発生することを確認）
+# ========================================
+
+def test_multiple_exceptions():
+    """複数の例外パターンをテスト"""
+    # 0で割る
+    with pytest.raises(ValueError) as exc_info:
+        divide(10, 0)
+    
+    # エラーメッセージを確認
+    assert "0で割る" in str(exc_info.value)
+    
+    # 負の数の階乗
+    with pytest.raises(ValueError) as exc_info:
+        factorial(-1)
+    
+    # エラーメッセージを確認
+    assert "負の数" in str(exc_info.value)
+
+
+# ========================================
+# マーカー（テストの分類）
+# ========================================
+
+@pytest.mark.slow
+def test_slow_operation():
+    """時間がかかるテスト"""
+    # 大きな数の階乗（時間がかかる）
+    result = factorial(20)
+    # 20! = 2432902008176640000
+    assert result == 2432902008176640000
+
+
+@pytest.mark.unit
+def test_unit_add():
+    """単体テスト"""
+    # シンプルな単体テスト
+    assert add(1, 1) == 2
+
+
+# マーカー付きテストの実行方法:
+# pytest -m slow        # slowマーカーのみ実行
+# pytest -m "not slow"  # slow以外を実行
+# pytest -m unit        # unitマーカーのみ実行
+
+
+# ========================================
+# 近似比較（浮動小数点）
+# ========================================
+
+def test_float_comparison():
+    """浮動小数点の近似比較"""
+    # 0.1 + 0.2 は厳密には 0.3 にならない
+    result = 0.1 + 0.2
+    
+    # ❌ これは失敗する可能性がある
+    # assert result == 0.3
+    
+    # ✅ 近似比較を使う
+    assert result == pytest.approx(0.3)
+    
+    # 許容誤差を指定
+    assert result == pytest.approx(0.3, abs=1e-9)
+
+
+# ========================================
+# 複数のassert（すべて実行）
+# ========================================
+
+def test_multiple_assertions():
+    """複数の検証を含むテスト"""
+    # 複数のassertを書く
+    assert add(1, 2) == 3
+    assert add(5, 5) == 10
+    assert add(0, 0) == 0
+    # どれか1つでも失敗したらテスト失敗
+
+
+# ========================================
+# スキップとxfail（条件付き実行）
+# ========================================
+
+@pytest.mark.skip(reason="まだ実装中")
+def test_not_implemented_yet():
+    """未実装の機能のテスト"""
+    # このテストはスキップされる
+    assert False
+
+
+@pytest.mark.skipif(sys.platform == "win32", 
+                   reason="Windowsでは動作しない")
+def test_unix_specific():
+    """Unix専用のテスト"""
+    # Windowsではスキップされる
+    assert True
+
+
+@pytest.mark.xfail(reason="既知のバグ")
+def test_known_bug():
+    """失敗することがわかっているテスト"""
+    # 失敗しても全体のテスト結果に影響しない
+    assert 1 + 1 == 3  # わざと間違い
+```
+
+---
+
+## 📊 ステップ6：テストカバレッジの確認
+
+```bash
+# pytest-covをインストール
+pip install pytest-cov
+
+# カバレッジを測定
+pytest --cov=src tests/
+
+# HTMLレポートを生成
+pytest --cov=src --cov-report=html tests/
+
+# レポートを開く
+# htmlcov/index.html をブラウザで開く
+```
+
+---
+
+## 📝 ステップ7：requirements.txt
+
+```text
+# requirements.txt
+# プロジェクトの依存パッケージ
+
+pytest==7.4.3
+pytest-cov==4.1.0
+```
+
+インストール：
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 🎯 実行コマンドまとめ
+
+```bash
+# 基本的な実行
+pytest                          # すべてのテストを実行
+pytest -v                       # 詳細表示
+pytest -s                       # print文を表示
+pytest tests/                   # testsディレクトリのみ
+
+# 特定のテストを実行
+pytest tests/test_calculator.py                    # 特定ファイル
+pytest tests/test_calculator.py::test_add_basic    # 特定関数
+
+# マーカーで絞り込み
+pytest -m slow                  # slowマーカーのみ
+pytest -m "not slow"            # slow以外
+
+# カバレッジ
+pytest --cov=src tests/         # カバレッジ測定
+pytest --cov=src --cov-report=html tests/  # HTMLレポート
+
+# 失敗したテストのみ再実行
+pytest --lf                     # last-failed
+
+# 並列実行（要pytest-xdist）
+pytest -n auto                  # 自動で並列数決定
+```
+
+---
+
+## ✅ チェックリスト
+
+- [ ] pytestをインストールした
+- [ ] テストファイル名は `test_*.py` で始まる
+- [ ] テスト関数名は `test_*` で始まる
+- [ ] `assert` で検証している
+- [ ] 例外テストは `pytest.raises()` を使う
+- [ ] パラメータ化で複数ケースをテスト
+- [ ] カバレッジを確認した
+
+---
+
+これで完璧！実際にコードを書いて試してみてください！🚀
