@@ -1,0 +1,612 @@
+# 🧪 ツール動作確認テスト（完全版）
+
+**インストール成功おめでとうございます！🎉**
+では実際に動くか確認しましょう！
+
+---
+
+## 🚀 ステップ1: テスト用の悪いコードを作成
+
+```powershell
+# test_code.py を作成
+New-Item -Path "test_code.py" -ItemType File
+```
+
+**test_code.pyに以下をコピペ:**
+
+```python
+# test_code.py - わざと悪く書いたコード
+import sys,os,json
+import numpy as np
+from typing import List
+import pandas as pd
+
+def calc(x,y):
+    result=x+y
+    return result
+
+def get_avg(nums):
+    total=0
+    for n in nums:
+        total+=n
+    return total/len(nums)
+
+class user:
+    def __init__(self,name,age):
+        self.name=name
+        self.age=age
+    
+    def show(self):
+        print(f'{self.name}は{self.age}歳')
+
+if __name__=='__main__':
+    data=[1,2,3,4,5]
+    avg=get_avg(data)
+    print(f'平均: {avg}')
+    u=user('太郎',25)
+    u.show()
+```
+
+---
+
+## 🔍 ステップ2: 各ツールをテスト
+
+### 1️⃣ flake8（スタイルチェック）
+
+```powershell
+# まずflake8で問題点をチェック
+flake8 test_code.py
+```
+
+**期待される出力:**
+```
+test_code.py:2:11: E401 multiple imports on one line
+test_code.py:2:14: F401 'os' imported but unused
+test_code.py:2:17: F401 'json' imported but unused
+test_code.py:5:1: F401 'pandas as pd' imported but unused
+test_code.py:7:1: E302 expected 2 blank lines, found 1
+test_code.py:8:11: E225 missing whitespace around operator
+test_code.py:11:1: E302 expected 2 blank lines, found 1
+test_code.py:12:10: E225 missing whitespace around operator
+test_code.py:18:1: E302 expected 2 blank lines, found 1
+test_code.py:18:7: E701 multiple statements on one line (colon)
+...
+```
+
+**日本語解説:**
+- ✅ ツールが動いてる！エラーが大量に検出されました
+- ❌ インポートの書き方が間違ってる
+- ❌ スペースが足りない
+- ❌ 空行が足りない
+
+---
+
+### 2️⃣ black（自動フォーマット）
+
+```powershell
+# blackで自動修正
+black test_code.py
+```
+
+**期待される出力:**
+```
+reformatted test_code.py
+
+All done! ✨ 🍰 ✨
+1 file reformatted.
+```
+
+**確認:**
+```powershell
+# ファイルを見てみる
+Get-Content test_code.py
+```
+
+**修正後のコード（一部）:**
+```python
+# test_code.py - blackで自動整形された
+import sys, os, json
+import numpy as np
+from typing import List
+import pandas as pd
+
+
+def calc(x, y):
+    result = x + y
+    return result
+
+
+def get_avg(nums):
+    total = 0
+    for n in nums:
+        total += n
+    return total / len(nums)
+```
+
+**日本語解説:**
+- ✅ スペースが自動で追加された！
+- ✅ 空行が自動で追加された！
+- ✅ フォーマットが綺麗になった！
+
+---
+
+### 3️⃣ isort（import整理）
+
+```powershell
+# isortでimport文を整理
+isort --profile black test_code.py
+```
+
+**期待される出力:**
+```
+Fixing test_code.py
+```
+
+**確認:**
+```powershell
+Get-Content test_code.py -Head 10
+```
+
+**修正後（冒頭部分）:**
+```python
+# test_code.py
+import json
+import os
+import sys
+from typing import List
+
+import numpy as np
+import pandas as pd
+
+
+def calc(x, y):
+```
+
+**日本語解説:**
+- ✅ import文が整理された！
+- ✅ 標準ライブラリ → サードパーティの順に並んだ！
+- ✅ 1行に複数importが分割された！
+
+---
+
+### 4️⃣ pylint（詳細分析）
+
+```powershell
+# pylintで詳細チェック
+pylint test_code.py
+```
+
+**期待される出力（抜粋）:**
+```
+************* Module test_code
+test_code.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+test_code.py:2:0: C0411: standard import "import json" should be placed before "import sys" (wrong-import-order)
+test_code.py:10:0: C0116: Missing function or method docstring (missing-function-docstring)
+test_code.py:10:0: C0103: Function name "calc" doesn't conform to snake_case naming style (invalid-name)
+test_code.py:18:0: C0115: Missing class docstring (missing-class-docstring)
+test_code.py:18:0: C0103: Class name "user" doesn't conform to PascalCase naming style (invalid-name)
+
+------------------------------------------------------------------
+Your code has been rated at 3.33/10 (previous run: 3.33/10, +0.00)
+```
+
+**日本語解説:**
+- ✅ より詳細な問題点が検出された！
+- ❌ ドキュメントがない
+- ❌ 命名規則が守られていない
+- ❌ スコアは 3.33/10（低い！）
+
+---
+
+### 5️⃣ mypy（型チェック）
+
+```powershell
+# mypyで型チェック
+mypy test_code.py
+```
+
+**期待される出力:**
+```
+test_code.py:10: error: Function is missing a return type annotation
+test_code.py:10: error: Function is missing a type annotation for one or more arguments
+test_code.py:14: error: Function is missing a return type annotation
+test_code.py:14: error: Function is missing a type annotation for one or more arguments
+test_code.py:19: error: Function is missing a return type annotation
+test_code.py:23: error: Function is missing a return type annotation
+Found 6 errors in 1 file (checked 1 source file)
+```
+
+**日本語解説:**
+- ✅ 型ヒントがないことが検出された！
+- ❌ 関数の引数と戻り値に型がない
+
+---
+
+## ✨ ステップ3: 完璧なコードを作成
+
+**good_code.pyを作成:**
+
+```powershell
+New-Item -Path "good_code.py" -ItemType File
+```
+
+**good_code.pyに以下をコピペ:**
+
+```python
+"""
+数値計算とユーザー管理のテストモジュール.
+
+このモジュールは基本的な数値計算とユーザー情報管理の機能を提供します。
+"""
+
+from typing import List
+
+
+def calculate_sum(x: int, y: int) -> int:
+    """
+    2つの整数を加算する.
+
+    Args:
+        x: 第一引数
+        y: 第二引数
+
+    Returns:
+        xとyの合計
+
+    Examples:
+        >>> calculate_sum(1, 2)
+        3
+    """
+    result: int = x + y
+    return result
+
+
+def calculate_average(numbers: List[float]) -> float:
+    """
+    数値リストの平均値を計算する.
+
+    Args:
+        numbers: 数値のリスト
+
+    Returns:
+        平均値
+
+    Raises:
+        ValueError: リストが空の場合
+
+    Examples:
+        >>> calculate_average([1, 2, 3, 4, 5])
+        3.0
+    """
+    if not numbers:
+        raise ValueError("リストが空です")
+
+    total: float = 0.0
+    for num in numbers:
+        total += num
+    return total / len(numbers)
+
+
+class User:
+    """
+    ユーザー情報を管理するクラス.
+
+    Attributes:
+        name: ユーザー名
+        age: 年齢
+    """
+
+    def __init__(self, name: str, age: int) -> None:
+        """
+        ユーザーを初期化する.
+
+        Args:
+            name: ユーザー名
+            age: 年齢
+        """
+        self.name = name
+        self.age = age
+
+    def show_info(self) -> None:
+        """ユーザー情報を表示する."""
+        print(f"{self.name}は{self.age}歳")
+
+
+def main() -> None:
+    """メイン処理."""
+    # 数値計算のテスト
+    data: List[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
+    average: float = calculate_average(data)
+    print(f"平均: {average}")
+
+    # ユーザー管理のテスト
+    user = User("太郎", 25)
+    user.show_info()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## 🎯 ステップ4: 完璧なコードをチェック
+
+### 全ツールを一気にチェック！
+
+```powershell
+# 1. blackチェック（変更なし確認）
+Write-Host "`n=== BLACK CHECK ===" -ForegroundColor Cyan
+black --check good_code.py
+
+# 2. isortチェック（変更なし確認）
+Write-Host "`n=== ISORT CHECK ===" -ForegroundColor Cyan
+isort --check-only good_code.py
+
+# 3. flake8チェック（エラーゼロ確認）
+Write-Host "`n=== FLAKE8 CHECK ===" -ForegroundColor Cyan
+flake8 good_code.py
+
+# 4. pylintチェック（高スコア確認）
+Write-Host "`n=== PYLINT CHECK ===" -ForegroundColor Cyan
+pylint good_code.py
+
+# 5. mypyチェック（型エラーゼロ確認）
+Write-Host "`n=== MYPY CHECK ===" -ForegroundColor Cyan
+mypy good_code.py
+```
+
+**期待される出力:**
+
+```
+=== BLACK CHECK ===
+All done! ✨ 🍰 ✨
+1 file would be left unchanged.
+
+=== ISORT CHECK ===
+Skipped 1 files
+
+=== FLAKE8 CHECK ===
+(何も表示されない = エラーゼロ！)
+
+=== PYLINT CHECK ===
+--------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+
+=== MYPY CHECK ===
+Success: no issues found in 1 source file
+```
+
+**🎉 全部パス！完璧なコードです！**
+
+---
+
+## 📊 比較表を作成
+
+**comparison.ps1 を作成:**
+
+```powershell
+# comparison.ps1 - ビフォーアフター比較スクリプト
+
+Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Yellow
+Write-Host "║   コード品質ツール - Before/After 比較        ║" -ForegroundColor Yellow
+Write-Host "╚════════════════════════════════════════════════╝`n" -ForegroundColor Yellow
+
+Write-Host "【Before: test_code.py】" -ForegroundColor Red
+Write-Host "------------------------`n" -ForegroundColor Red
+
+Write-Host "flake8 結果:" -ForegroundColor White
+$flake8_bad = (flake8 test_code.py | Measure-Object -Line).Lines
+Write-Host "エラー数: $flake8_bad 個`n" -ForegroundColor Red
+
+Write-Host "pylint 結果:" -ForegroundColor White
+pylint test_code.py --score=y 2>&1 | Select-String "rated at"
+Write-Host ""
+
+Write-Host "`n【After: good_code.py】" -ForegroundColor Green
+Write-Host "---------------------`n" -ForegroundColor Green
+
+Write-Host "flake8 結果:" -ForegroundColor White
+$flake8_good = (flake8 good_code.py | Measure-Object -Line).Lines
+if ($flake8_good -eq 0) {
+    Write-Host "エラー数: 0 個 ✅`n" -ForegroundColor Green
+}
+
+Write-Host "pylint 結果:" -ForegroundColor White
+pylint good_code.py --score=y 2>&1 | Select-String "rated at"
+
+Write-Host "`n" -NoNewline
+Write-Host "mypy 結果:" -ForegroundColor White
+mypy good_code.py
+
+Write-Host "`n╔════════════════════════════════════════════════╗" -ForegroundColor Cyan
+Write-Host "║              ツール動作確認完了！ 🎉          ║" -ForegroundColor Cyan
+Write-Host "╚════════════════════════════════════════════════╝" -ForegroundColor Cyan
+```
+
+**実行:**
+```powershell
+.\comparison.ps1
+```
+
+---
+
+## 🎮 簡単テストコマンド集
+
+**test_all.ps1 を作成（便利スクリプト）:**
+
+```powershell
+# test_all.ps1 - 全ツールを一発テスト
+
+param(
+    [string]$File = "test_code.py"
+)
+
+Write-Host "`n🔍 ファイル: $File をチェック中...`n" -ForegroundColor Cyan
+
+# 1. Black
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+Write-Host "📝 Black (フォーマット)" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+black --check --diff $File
+Write-Host ""
+
+# 2. isort
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+Write-Host "📦 isort (import整理)" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+isort --check-only --diff $File
+Write-Host ""
+
+# 3. flake8
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+Write-Host "🔍 flake8 (スタイルチェック)" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+$flake8_output = flake8 $File 2>&1
+if ($flake8_output) {
+    Write-Host $flake8_output -ForegroundColor Red
+} else {
+    Write-Host "✅ エラーなし！" -ForegroundColor Green
+}
+Write-Host ""
+
+# 4. pylint
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+Write-Host "📊 pylint (詳細分析)" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+pylint $File --score=y 2>&1 | Select-String "rated at"
+Write-Host ""
+
+# 5. mypy
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+Write-Host "🔬 mypy (型チェック)" -ForegroundColor Yellow
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Yellow
+mypy $File
+Write-Host ""
+
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
+Write-Host "✨ チェック完了！" -ForegroundColor Cyan
+Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
+```
+
+**使い方:**
+```powershell
+# 悪いコードをチェック
+.\test_all.ps1 -File test_code.py
+
+# 良いコードをチェック
+.\test_all.ps1 -File good_code.py
+```
+
+---
+
+## 🚀 クイックテスト（1行コマンド）
+
+```powershell
+# 全部まとめてチェック
+black test_code.py; isort test_code.py; flake8 test_code.py; pylint test_code.py; mypy test_code.py
+
+# 結果を見やすく
+Write-Host "=== BLACK ===" -ForegroundColor Cyan; black --check test_code.py; `
+Write-Host "`n=== ISORT ===" -ForegroundColor Cyan; isort --check test_code.py; `
+Write-Host "`n=== FLAKE8 ===" -ForegroundColor Cyan; flake8 test_code.py; `
+Write-Host "`n=== PYLINT ===" -ForegroundColor Cyan; pylint test_code.py --score=y; `
+Write-Host "`n=== MYPY ===" -ForegroundColor Cyan; mypy test_code.py
+```
+
+---
+
+## ✅ 動作確認チェックリスト
+
+```powershell
+# チェックリスト実行スクリプト
+Write-Host "🎯 ツール動作確認チェックリスト`n" -ForegroundColor Cyan
+
+$checks = @(
+    @{Tool="black"; Command="black --version"; Expected="black,"}
+    @{Tool="isort"; Command="isort --version"; Expected=""}
+    @{Tool="flake8"; Command="flake8 --version"; Expected=""}
+    @{Tool="pylint"; Command="pylint --version"; Expected="pylint"}
+    @{Tool="mypy"; Command="mypy --version"; Expected="mypy"}
+)
+
+foreach ($check in $checks) {
+    Write-Host "Checking $($check.Tool)... " -NoNewline
+    $result = Invoke-Expression $check.Command 2>&1
+    if ($result) {
+        Write-Host "✅ OK" -ForegroundColor Green
+        Write-Host "  → $result`n" -ForegroundColor Gray
+    } else {
+        Write-Host "❌ NG" -ForegroundColor Red
+    }
+}
+
+Write-Host "`n全てのツールが正常にインストールされています！🎉" -ForegroundColor Green
+```
+
+---
+
+## 📝 まとめ
+
+### 実行したテスト
+
+```powershell
+# 今日やったこと
+@"
+✅ 1. ツールインストール完了
+✅ 2. test_code.py で悪いコードをテスト
+✅ 3. 各ツールでエラー検出を確認
+✅ 4. blackで自動フォーマット実行
+✅ 5. isortでimport整理実行
+✅ 6. good_code.py で完璧なコードを作成
+✅ 7. 全ツールでエラーゼロを確認
+✅ 8. pylintスコア 10.00/10 達成
+"@
+
+Write-Host $result -ForegroundColor Green
+```
+
+### 次のステップ
+
+```powershell
+# おすすめの学習順序
+@"
+📚 次はこれをやろう:
+
+1️⃣ pyproject.toml と .flake8 を作成
+   → 設定ファイルで挙動をカスタマイズ
+
+2️⃣ PyCharmやVS Codeに統合
+   → 保存時に自動実行
+
+3️⃣ git commit前に自動チェック
+   → pre-commitフック設定
+
+4️⃣ CI/CDパイプラインに組み込み
+   → GitHub Actionsなど
+"@
+```
+
+---
+
+## 🎉 完了確認
+
+```powershell
+Write-Host @"
+
+╔═══════════════════════════════════════════════════╗
+║                                                   ║
+║     🎊 ツール動作確認テスト完了！ 🎊            ║
+║                                                   ║
+║  全てのツールが正常に動作しています！             ║
+║                                                   ║
+║  これで本格的な開発を始められます 🚀             ║
+║                                                   ║
+╚═══════════════════════════════════════════════════╝
+
+"@ -ForegroundColor Green
+```
+
+**お疲れ様でした！これでツールが使えることが確認できました！🔥**
+
+次は実際のプロジェクトで使ってみてください！
