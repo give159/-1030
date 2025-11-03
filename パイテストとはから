@@ -1,0 +1,1078 @@
+# pytest完全マスター：新人エンジニア向けチートシート
+
+> 📥 **このガイドを保存してオフラインで使おう！**  
+> ブラウザの「印刷」→「PDFとして保存」でダウンロード可能
+
+---
+
+## 📚 目次
+
+1. [pytestとは？](#pytestとは)
+2. [インストール＆セットアップ](#インストールセットアップ)
+3. [基本的な書き方](#基本的な書き方)
+4. [Assert（検証）パターン集](#assertパターン集)
+5. [例外テスト](#例外テスト)
+6. [フィクスチャ（前処理・後処理）](#フィクスチャ)
+7. [パラメータ化テスト](#パラメータ化テスト)
+8. [マーカー（テストの分類）](#マーカー)
+9. [モック・パッチ](#モックパッチ)
+10. [実行コマンド完全版](#実行コマンド)
+11. [ディレクトリ構成](#ディレクトリ構成)
+12. [実務でよく使うパターン](#実務パターン)
+13. [トラブルシューティング](#トラブルシューティング)
+
+---
+
+## 📖 pytestとは？
+
+**pytest**は、Pythonで最も人気のあるテストフレームワークです。
+
+### なぜpytestを使うのか？
+
+```python
+# ❌ 手動テスト（非効率）
+def add(a, b):
+    return a + b
+
+# 毎回手動で確認...
+print(add(2, 3))  # 5
+print(add(-1, 1))  # 0
+# 結果を目で確認... 😓
+```
+
+```python
+# ✅ pytestで自動テスト（効率的）
+def test_add():
+    """自動で検証してくれる"""
+    assert add(2, 3) == 5
+    assert add(-1, 1) == 0
+# ターミナルで pytest 実行 → 自動で全部チェック！ 🎉
+```
+
+### pytestの利点
+
+- ✅ シンプルな書き方（`assert`だけ）
+- ✅ 自動でテストファイルを検出
+- ✅ 詳細なエラーレポート
+- ✅ 豊富なプラグイン
+- ✅ CI/CD（自動テスト）に組み込みやすい
+
+---
+
+## ⚙️ インストール＆セットアップ
+
+### 1. インストール
+
+```bash
+# pytestをインストール
+pip install pytest
+
+# よく使うプラグインも一緒に
+pip install pytest pytest-cov pytest-mock
+
+# バージョン確認
+pytest --version
+```
+
+### 2. プロジェクト構成
+
+```
+my_project/
+├── src/                    # ソースコード
+│   ├── __init__.py
+│   └── calculator.py
+├── tests/                  # テストコード
+│   ├── __init__.py
+│   └── test_calculator.py
+├── pytest.ini              # pytest設定
+└── requirements.txt        # 依存パッケージ
+```
+
+### 3. requirements.txt
+
+```text
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+```
+
+```bash
+# インストール
+pip install -r requirements.txt
+```
+
+### 4. pytest.ini（設定ファイル）
+
+```ini
+[pytest]
+# テストファイルのパターン
+python_files = test_*.py *_test.py
+
+# テスト関数のパターン
+python_functions = test_*
+
+# テストを探すディレクトリ
+testpaths = tests
+
+# デフォルトオプション
+addopts = 
+    -v                    # 詳細表示
+    --strict-markers      # 未定義マーカーでエラー
+    --color=yes           # 色付き出力
+    --tb=short            # トレースバックを短く
+
+# カスタムマーカー定義
+markers =
+    slow: 実行に時間がかかるテスト
+    integration: 統合テスト
+    unit: 単体テスト
+    smoke: スモークテスト
+```
+
+---
+
+## 📝 基本的な書き方
+
+### 最小限のテスト
+
+```python
+# tests/test_basic.py
+
+def test_simple():
+    """最もシンプルなテスト"""
+    # assert で検証するだけ
+    assert 1 + 1 == 2
+```
+
+```bash
+# 実行
+pytest tests/test_basic.py
+```
+
+### テスト関数の命名規則
+
+```python
+# ✅ 良い例（自動検出される）
+def test_add():
+    pass
+
+def test_add_positive_numbers():
+    pass
+
+def test_user_creation():
+    pass
+
+# ❌ 悪い例（検出されない）
+def add_test():  # test_ で始まっていない
+    pass
+
+def check_add():  # test_ で始まっていない
+    pass
+```
+
+### 基本構造
+
+```python
+# tests/test_calculator.py
+
+# テスト対象をインポート
+from calculator import add, subtract
+
+# テスト関数（test_ で始める）
+def test_add():
+    """足し算のテスト"""
+    # 実行
+    result = add(2, 3)
+    # 検証
+    assert result == 5
+
+def test_subtract():
+    """引き算のテスト"""
+    result = subtract(5, 3)
+    assert result == 2
+```
+
+---
+
+## ✓ Assertパターン集
+
+### 基本的なassert
+
+```python
+def test_basic_assertions():
+    """基本的な検証パターン"""
+    
+    # 等しい
+    assert 1 + 1 == 2
+    
+    # 等しくない
+    assert 1 + 1 != 3
+    
+    # 真偽値
+    assert True
+    assert not False
+    
+    # None
+    assert None is None
+    assert 1 is not None
+    
+    # 大小比較
+    assert 5 > 3
+    assert 3 < 5
+    assert 5 >= 5
+    assert 3 <= 3
+```
+
+### コレクションのassert
+
+```python
+def test_collections():
+    """リスト・辞書などの検証"""
+    
+    # リストの要素チェック
+    numbers = [1, 2, 3, 4, 5]
+    assert 3 in numbers
+    assert 6 not in numbers
+    
+    # リストの長さ
+    assert len(numbers) == 5
+    
+    # リストの等価性
+    assert numbers == [1, 2, 3, 4, 5]
+    
+    # 辞書のキーチェック
+    user = {"name": "田中", "age": 30}
+    assert "name" in user
+    assert user["name"] == "田中"
+    
+    # セットの検証
+    tags = {"python", "test", "pytest"}
+    assert "python" in tags
+```
+
+### 文字列のassert
+
+```python
+def test_strings():
+    """文字列の検証"""
+    
+    text = "Hello, pytest!"
+    
+    # 含まれるか
+    assert "pytest" in text
+    
+    # 前方一致
+    assert text.startswith("Hello")
+    
+    # 後方一致
+    assert text.endswith("!")
+    
+    # 大文字小文字
+    assert text.lower() == "hello, pytest!"
+    
+    # 空文字列チェック
+    assert "" == ""
+    assert bool("") == False
+```
+
+### 浮動小数点のassert
+
+```python
+def test_floats():
+    """浮動小数点の検証（近似比較）"""
+    
+    # ❌ これは失敗する可能性がある
+    # assert 0.1 + 0.2 == 0.3
+    
+    # ✅ pytest.approx を使う
+    import pytest
+    assert 0.1 + 0.2 == pytest.approx(0.3)
+    
+    # 許容誤差を指定
+    assert 0.333333 == pytest.approx(1/3, abs=1e-6)
+    
+    # 相対誤差
+    assert 100.1 == pytest.approx(100, rel=0.01)
+```
+
+### カスタムエラーメッセージ
+
+```python
+def test_with_message():
+    """エラー時にわかりやすいメッセージを表示"""
+    
+    result = 10
+    expected = 10
+    
+    # メッセージ付きassert
+    assert result == expected, f"期待値: {expected}, 実際: {result}"
+    
+    # より詳細に
+    numbers = [1, 2, 3]
+    assert len(numbers) == 3, \
+        f"リストの長さが間違っています。期待: 3, 実際: {len(numbers)}"
+```
+
+---
+
+## 🚨 例外テスト
+
+### 基本的な例外テスト
+
+```python
+import pytest
+
+def test_exception():
+    """例外が発生することを確認"""
+    
+    # ValueError が発生することを期待
+    with pytest.raises(ValueError):
+        int("not a number")
+    
+    # ZeroDivisionError が発生することを期待
+    with pytest.raises(ZeroDivisionError):
+        1 / 0
+```
+
+### エラーメッセージの検証
+
+```python
+def divide(a, b):
+    """割り算（0で割れない）"""
+    if b == 0:
+        raise ValueError("0で割ることはできません")
+    return a / b
+
+
+def test_divide_by_zero():
+    """エラーメッセージも確認"""
+    
+    # メッセージの一部を確認
+    with pytest.raises(ValueError, match="0で割る"):
+        divide(10, 0)
+    
+    # 完全一致
+    with pytest.raises(ValueError, match="^0で割ることはできません$"):
+        divide(5, 0)
+```
+
+### 例外オブジェクトの取得
+
+```python
+def test_exception_details():
+    """例外の詳細情報を取得"""
+    
+    # 例外オブジェクトを取得
+    with pytest.raises(ValueError) as exc_info:
+        raise ValueError("エラーが発生しました")
+    
+    # エラーメッセージを確認
+    assert "エラーが発生" in str(exc_info.value)
+    
+    # 例外の型を確認
+    assert exc_info.type == ValueError
+```
+
+### 例外が発生しないことを確認
+
+```python
+def test_no_exception():
+    """正常に動作することを確認"""
+    
+    # 例外が発生しなければOK
+    result = divide(10, 2)
+    assert result == 5.0
+    
+    # does_not_raise を使う方法（明示的）
+    from pytest import does_not_raise
+    
+    with does_not_raise():
+        divide(20, 4)
+```
+
+---
+
+## 🔧 フィクスチャ
+
+フィクスチャは、テストの前処理・後処理を定義する仕組みです。
+
+### 基本的なフィクスチャ
+
+```python
+import pytest
+
+@pytest.fixture
+def sample_data():
+    """テストデータを提供"""
+    # テスト前に実行される（setUp）
+    data = [1, 2, 3, 4, 5]
+    print("\n[setUp] データを準備しました")
+    
+    # テストにデータを渡す
+    return data
+
+
+def test_with_fixture(sample_data):
+    """フィクスチャを使うテスト"""
+    # sample_data が自動で渡される
+    assert len(sample_data) == 5
+    assert sum(sample_data) == 15
+```
+
+### 前処理・後処理のあるフィクスチャ
+
+```python
+@pytest.fixture
+def database_connection():
+    """データベース接続のセットアップ・クリーンアップ"""
+    # セットアップ（テスト前）
+    print("\n[setUp] データベースに接続")
+    db = {"connected": True, "data": []}
+    
+    # テストに渡す
+    yield db
+    
+    # クリーンアップ（テスト後）
+    print("\n[tearDown] データベースを切断")
+    db["connected"] = False
+    db["data"].clear()
+
+
+def test_database(database_connection):
+    """データベースを使うテスト"""
+    # database_connection がセットアップ済み
+    assert database_connection["connected"] == True
+    database_connection["data"].append("test")
+    assert len(database_connection["data"]) == 1
+```
+
+### スコープ（有効範囲）
+
+```python
+# 関数ごと（デフォルト）
+@pytest.fixture(scope="function")
+def function_scope():
+    """各テスト関数ごとに実行"""
+    return "function"
+
+
+# クラスごと
+@pytest.fixture(scope="class")
+def class_scope():
+    """テストクラスごとに1回実行"""
+    return "class"
+
+
+# モジュールごと
+@pytest.fixture(scope="module")
+def module_scope():
+    """ファイルごとに1回実行"""
+    return "module"
+
+
+# セッション全体で1回
+@pytest.fixture(scope="session")
+def session_scope():
+    """全テスト実行中に1回だけ実行"""
+    return "session"
+```
+
+### conftest.py（フィクスチャの共有）
+
+```python
+# tests/conftest.py
+"""すべてのテストで使えるフィクスチャを定義"""
+
+import pytest
+
+@pytest.fixture
+def sample_user():
+    """サンプルユーザーを提供"""
+    return {
+        "id": 1,
+        "name": "田中太郎",
+        "email": "tanaka@example.com"
+    }
+
+
+@pytest.fixture
+def temp_file(tmp_path):
+    """一時ファイルを作成"""
+    # tmp_path は pytestが提供する組み込みフィクスチャ
+    file = tmp_path / "test.txt"
+    file.write_text("テストデータ")
+    return file
+```
+
+```python
+# tests/test_user.py
+"""conftest.pyのフィクスチャを使える"""
+
+def test_user_name(sample_user):
+    """sample_user はインポート不要で使える"""
+    assert sample_user["name"] == "田中太郎"
+
+
+def test_file_content(temp_file):
+    """temp_file も使える"""
+    content = temp_file.read_text()
+    assert content == "テストデータ"
+```
+
+### 組み込みフィクスチャ
+
+```python
+def test_temp_directory(tmp_path):
+    """一時ディレクトリ"""
+    # tmp_path は自動でクリーンアップされる
+    file = tmp_path / "test.txt"
+    file.write_text("Hello")
+    assert file.read_text() == "Hello"
+
+
+def test_temp_dir_legacy(tmpdir):
+    """一時ディレクトリ（レガシー版）"""
+    # tmp_path の方が推奨
+    pass
+
+
+def test_capture_output(capsys):
+    """標準出力をキャプチャ"""
+    print("Hello, World!")
+    captured = capsys.readouterr()
+    assert captured.out == "Hello, World!\n"
+
+
+def test_monkeypatch(monkeypatch):
+    """環境変数やオブジェクトを一時的に変更"""
+    # 環境変数を設定
+    monkeypatch.setenv("TEST_VAR", "test_value")
+    import os
+    assert os.getenv("TEST_VAR") == "test_value"
+```
+
+---
+
+## 🔄 パラメータ化テスト
+
+同じテストを複数の入力値で実行する
+
+### 基本的なパラメータ化
+
+```python
+import pytest
+
+@pytest.mark.parametrize("a, b, expected", [
+    (1, 2, 3),      # 1 + 2 = 3
+    (5, 5, 10),     # 5 + 5 = 10
+    (-1, 1, 0),     # -1 + 1 = 0
+    (0, 0, 0),      # 0 + 0 = 0
+])
+def test_add(a, b, expected):
+    """複数のケースを一度にテスト"""
+    result = a + b
+    assert result == expected
+```
+
+**実行結果：**
+```
+test_add[1-2-3] PASSED
+test_add[5-5-10] PASSED
+test_add[-1-1-0] PASSED
+test_add[0-0-0] PASSED
+```
+
+### わかりやすいテスト名
+
+```python
+@pytest.mark.parametrize("a, b, expected", [
+    pytest.param(1, 2, 3, id="正の数"),
+    pytest.param(-1, 1, 0, id="負の数"),
+    pytest.param(0, 0, 0, id="ゼロ"),
+])
+def test_add_with_id(a, b, expected):
+    """テスト名をカスタマイズ"""
+    assert a + b == expected
+```
+
+**実行結果：**
+```
+test_add_with_id[正の数] PASSED
+test_add_with_id[負の数] PASSED
+test_add_with_id[ゼロ] PASSED
+```
+
+### 複数パラメータの組み合わせ
+
+```python
+@pytest.mark.parametrize("x", [1, 2, 3])
+@pytest.mark.parametrize("y", [10, 20])
+def test_multiply(x, y):
+    """全組み合わせをテスト（1×10, 1×20, 2×10...）"""
+    result = x * y
+    assert result == x * y
+    # 6つのテストが実行される（3 × 2）
+```
+
+### パラメータ化 + 例外テスト
+
+```python
+@pytest.mark.parametrize("value, exception", [
+    ("abc", ValueError),
+    ("12.34.56", ValueError),
+    ("", ValueError),
+])
+def test_invalid_int_conversion(value, exception):
+    """無効な値でエラーが発生することを確認"""
+    with pytest.raises(exception):
+        int(value)
+```
+
+---
+
+## 🏷️ マーカー
+
+テストを分類・フィルタリングする
+
+### 基本的なマーカー
+
+```python
+import pytest
+
+@pytest.mark.slow
+def test_slow_operation():
+    """時間がかかるテスト"""
+    import time
+    time.sleep(2)
+    assert True
+
+
+@pytest.mark.unit
+def test_unit():
+    """単体テスト"""
+    assert 1 + 1 == 2
+
+
+@pytest.mark.integration
+def test_integration():
+    """統合テスト"""
+    assert True
+
+
+@pytest.mark.smoke
+def test_smoke():
+    """スモークテスト（重要な機能）"""
+    assert True
+```
+
+**実行方法：**
+```bash
+# slowマーカーのみ実行
+pytest -m slow
+
+# slow以外を実行
+pytest -m "not slow"
+
+# unitマーカーのみ
+pytest -m unit
+
+# 複数マーカー
+pytest -m "unit or integration"
+```
+
+### 組み込みマーカー
+
+```python
+import sys
+import pytest
+
+@pytest.mark.skip(reason="まだ実装していない")
+def test_not_implemented():
+    """このテストはスキップされる"""
+    assert False
+
+
+@pytest.mark.skipif(sys.platform == "win32", 
+                   reason="Windowsでは動作しない")
+def test_unix_only():
+    """条件付きスキップ"""
+    assert True
+
+
+@pytest.mark.xfail(reason="既知のバグ")
+def test_known_bug():
+    """失敗が予想されるテスト"""
+    assert 1 + 1 == 3  # わざと失敗
+
+
+@pytest.mark.xfail(strict=True)
+def test_should_fail():
+    """失敗しないとエラーになる"""
+    assert False
+```
+
+### カスタムマーカーの定義
+
+```python
+# pytest.ini
+[pytest]
+markers =
+    api: APIテスト
+    database: データベーステスト
+    critical: 重要なテスト
+```
+
+```python
+# tests/test_custom.py
+import pytest
+
+@pytest.mark.api
+def test_api_endpoint():
+    """APIのテスト"""
+    assert True
+
+
+@pytest.mark.database
+def test_database_query():
+    """データベースのテスト"""
+    assert True
+
+
+@pytest.mark.critical
+@pytest.mark.smoke
+def test_critical_feature():
+    """複数マーカーを付けられる"""
+    assert True
+```
+
+---
+
+## 🎭 モック・パッチ
+
+外部依存をモック化する
+
+### pytest-mock（推奨）
+
+```python
+# インストール
+# pip install pytest-mock
+
+def fetch_user_from_api(user_id):
+    """外部APIを呼ぶ関数（テストしたくない）"""
+    import requests
+    response = requests.get(f"https://api.example.com/users/{user_id}")
+    return response.json()
+
+
+def get_user_name(user_id):
+    """テスト対象の関数"""
+    user = fetch_user_from_api(user_id)
+    return user["name"]
+
+
+def test_get_user_name(mocker):
+    """モックを使ってAPIをシミュレート"""
+    # fetch_user_from_api をモック化
+    mock_fetch = mocker.patch("__main__.fetch_user_from_api")
+    
+    # モックの戻り値を設定
+    mock_fetch.return_value = {"id": 1, "name": "田中"}
+    
+    # テスト実行
+    result = get_user_name(1)
+    
+    # 検証
+    assert result == "田中"
+    # fetch_user_from_api が呼ばれたか確認
+    mock_fetch.assert_called_once_with(1)
+```
+
+### 戻り値のモック
+
+```python
+def test_mock_return_value(mocker):
+    """戻り値を設定"""
+    mock_func = mocker.Mock(return_value=42)
+    
+    result = mock_func()
+    assert result == 42
+    
+    # 呼び出し回数を確認
+    assert mock_func.call_count == 1
+
+
+def test_mock_side_effect(mocker):
+    """複数回呼び出しで異なる値を返す"""
+    mock_func = mocker.Mock(side_effect=[1, 2, 3])
+    
+    assert mock_func() == 1
+    assert mock_func() == 2
+    assert mock_func() == 3
+
+
+def test_mock_exception(mocker):
+    """例外を発生させる"""
+    mock_func = mocker.Mock(side_effect=ValueError("エラー"))
+    
+    with pytest.raises(ValueError):
+        mock_func()
+```
+
+### クラスのモック
+
+```python
+class Database:
+    def connect(self):
+        """実際のデータベースに接続（避けたい）"""
+        pass
+    
+    def query(self, sql):
+        """SQLを実行"""
+        pass
+
+
+def test_database_mock(mocker):
+    """クラス全体をモック化"""
+    # Database クラスをモック
+    mock_db = mocker.Mock(spec=Database)
+    
+    # メソッドの戻り値を設定
+    mock_db.query.return_value = [{"id": 1, "name": "test"}]
+    
+    # テスト実行
+    result = mock_db.query("SELECT * FROM users")
+    
+    # 検証
+    assert len(result) == 1
+    assert result[0]["name"] == "test"
+    
+    # メソッドが呼ばれたか確認
+    mock_db.query.assert_called_once_with("SELECT * FROM users")
+```
+
+### 環境変数のモック
+
+```python
+def test_environment_variable(mocker):
+    """環境変数を一時的に変更"""
+    mocker.patch.dict("os.environ", {"API_KEY": "test_key"})
+    
+    import os
+    assert os.getenv("API_KEY") == "test_key"
+```
+
+### 時刻のモック
+
+```python
+from datetime import datetime
+
+def test_freeze_time(mocker):
+    """現在時刻を固定"""
+    fixed_time = datetime(2025, 1, 1, 12, 0, 0)
+    
+    mocker.patch("datetime.datetime")
+    datetime.now.return_value = fixed_time
+    
+    # テスト実行
+    # now = datetime.now()
+    # assert now == fixed_time
+```
+
+---
+
+## 🎯 実行コマンド
+
+### 基本的な実行
+
+```bash
+# すべてのテストを実行
+pytest
+
+# 詳細表示
+pytest -v
+
+# さらに詳細（各テストの出力も表示）
+pytest -vv
+
+# print文を表示
+pytest -s
+
+# 詳細 + print表示
+pytest -sv
+```
+
+### ファイル・ディレクトリ指定
+
+```bash
+# 特定のディレクトリ
+pytest tests/
+
+# 特定のファイル
+pytest tests/test_calculator.py
+
+# 特定のテスト関数
+pytest tests/test_calculator.py::test_add
+
+# 特定のクラス
+pytest tests/test_calculator.py::TestCalculator
+
+# クラス内の特定メソッド
+pytest tests/test_calculator.py::TestCalculator::test_add
+```
+
+### フィルタリング
+
+```bash
+# マーカーで絞り込み
+pytest -m slow              # slowマーカーのみ
+pytest -m "not slow"        # slow以外
+pytest -m "unit or smoke"   # 複数マーカー
+
+# 名前で絞り込み（キーワード）
+pytest -k "add"             # 名前に"add"を含むテスト
+pytest -k "not slow"        # 名前に"slow"を含まない
+
+# 失敗したテストのみ再実行
+pytest --lf                 # last-failed
+pytest --ff                 # failed-first（失敗を先に）
+
+# 最初の失敗で停止
+pytest -x
+
+# N個失敗したら停止
+pytest --maxfail=3
+```
+
+### カバレッジ
+
+```bash
+# カバレッジを測定
+pytest --cov=src tests/
+
+# カバレッジ + 詳細レポート
+pytest --cov=src --cov-report=term-missing tests/
+
+# HTMLレポート生成
+pytest --cov=src --cov-report=html tests/
+# htmlcov/index.html を開く
+
+# カバレッジの最低ライン設定
+pytest --cov=src --cov-fail-under=80 tests/
+```
+
+### 並列実行
+
+```bash
+# pytest-xdist をインストール
+pip install pytest-xdist
+
+# 自動で並列数決定
+pytest -n auto
+
+# 4プロセスで並列実行
+pytest -n 4
+```
+
+### その他便利オプション
+
+```bash
+# テストの実行時間を表示
+pytest --durations=10       # 遅い10個を表示
+
+# 警告を表示
+pytest -W all
+
+# 詳細なトレースバック
+pytest --tb=long            # 詳細
+pytest --tb=short           # 短く（デフォルト）
+pytest --tb=no              # トレースバックなし
+
+# 結果をJUnitXML形式で出力（CI用）
+pytest --junitxml=report.xml
+
+# テストのコレクション（実行せず一覧表示）
+pytest --collect-only
+
+# ヘルプ
+pytest --help
+```
+
+---
+
+## 📂 ディレクトリ構成
+
+### パターン1：シンプル（小規模）
+
+```
+my_project/
+├── calculator.py
+└── test_calculator.py
+```
+
+### パターン2：src/tests分離（推奨）
+
+```
+my_project/
+├── src/
+│   ├── __init__.py
+│   ├── calculator.py
+│   └── utils.py
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py          # 共通フィクスチャ
+│   ├── test_calculator.py
+│   └── test_utils.py
+├── pytest.ini
+└── requirements.txt
+```
+
+### パターン3：大規模プロジェクト
+
+```
+my_project/
+├── src/
+│   ├── __init__.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── endpoints.py
+│   ├── database/
+│   │   ├── __init__.py
+│   │   └── models.py
+│   └── utils/
+│       ├── __init__.py
+│       └── helpers.py
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── unit/                # 単体テスト
+│   │   ├── __init__.py
+│   │   ├── test_api.py
+│   │   └── test_database.py
+│   ├── integration/         # 統合テスト
+│   │   ├── __init__.py
+│   │   └── test_api_integration.py
+│   └── fixtures/            # テストデータ
+│       └── sample_data.json
+├── pytest.ini
+├── requirements.txt
+└── .github/
+    └── workflows/
+        └── test.yml         # CI/CD設定
+```
+
+---
+
+## 💼 実務でよく使うパターン
+
+### パターン1：データベーステスト
+
+```python
+# conftest.py
+import pytest
+import sqlite3
+
+@pytest.fixture(scope="module")
+def db_connection():
+    """テスト用DBを作成"""
+    # セットアップ
+    conn = sqlite3.connect(":
